@@ -1,0 +1,28 @@
+package op
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+
+	"github.com/morning-night-dream/oidc/pkg/openapi"
+)
+
+func OpenIDConfiguration(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	res := openapi.OpenIDConfigurationSchema{
+		Issuer:                "http://localhost:1234",
+		AuthorizationEndpoint: "http://localhost:1234/op/auth",
+		TokenEndpoint:         "http://localhost:1234/op/token",
+		UserinfoEndpoint:      "http://localhost:1234/op/userinfo",
+		RevocationEndpoint:    "http://localhost:1234/op/revoke",
+	}
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("failed to encode response: %v", err)
+
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
