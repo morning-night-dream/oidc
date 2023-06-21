@@ -24,7 +24,7 @@ type ServerInterface interface {
 	OpenIDConfiguration(w http.ResponseWriter, r *http.Request)
 	// Authentication Request
 	// (GET /op/authorize)
-	Authorize(w http.ResponseWriter, r *http.Request)
+	Authorize(w http.ResponseWriter, r *http.Request, params AuthorizeParams)
 	// Token Request
 	// (POST /op/token)
 	Token(w http.ResponseWriter, r *http.Request, params TokenParams)
@@ -88,8 +88,53 @@ func (siw *ServerInterfaceWrapper) OpenIDConfiguration(w http.ResponseWriter, r 
 func (siw *ServerInterfaceWrapper) Authorize(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params AuthorizeParams
+
+	// ------------- Optional query parameter "response_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "response_type", r.URL.Query(), &params.ResponseType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "response_type", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "scope" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "scope", r.URL.Query(), &params.Scope)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "client_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "client_id", r.URL.Query(), &params.ClientId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "client_id", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "state", r.URL.Query(), &params.State)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "redirect_uri" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "redirect_uri", r.URL.Query(), &params.RedirectUri)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redirect_uri", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.Authorize(w, r)
+		siw.Handler.Authorize(w, r, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {

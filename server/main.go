@@ -116,6 +116,7 @@ func (hdl *Handler) Token(
 func (hdl *Handler) Authorize(
 	w http.ResponseWriter,
 	r *http.Request,
+	params openapi.AuthorizeParams,
 ) {
 	op.Auth(w, r)
 }

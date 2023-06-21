@@ -103,7 +103,7 @@ type ClientInterface interface {
 	OpenIDConfiguration(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// Authorize request
-	Authorize(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	Authorize(ctx context.Context, params *AuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// Token request
 	Token(ctx context.Context, params *TokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -169,8 +169,8 @@ func (c *Client) OpenIDConfiguration(ctx context.Context, reqEditors ...RequestE
 	return c.Client.Do(req)
 }
 
-func (c *Client) Authorize(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAuthorizeRequest(c.Server)
+func (c *Client) Authorize(ctx context.Context, params *AuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuthorizeRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +301,7 @@ func NewOpenIDConfigurationRequest(server string) (*http.Request, error) {
 }
 
 // NewAuthorizeRequest generates requests for Authorize
-func NewAuthorizeRequest(server string) (*http.Request, error) {
+func NewAuthorizeRequest(server string, params *AuthorizeParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -317,6 +317,92 @@ func NewAuthorizeRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ResponseType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "response_type", runtime.ParamLocationQuery, *params.ResponseType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Scope != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scope", runtime.ParamLocationQuery, *params.Scope); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.ClientId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "client_id", runtime.ParamLocationQuery, *params.ClientId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "state", runtime.ParamLocationQuery, *params.State); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.RedirectUri != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "redirect_uri", runtime.ParamLocationQuery, *params.RedirectUri); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -465,7 +551,7 @@ type ClientWithResponsesInterface interface {
 	OpenIDConfigurationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpenIDConfigurationResponse, error)
 
 	// Authorize request
-	AuthorizeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthorizeResponse, error)
+	AuthorizeWithResponse(ctx context.Context, params *AuthorizeParams, reqEditors ...RequestEditorFn) (*AuthorizeResponse, error)
 
 	// Token request
 	TokenWithResponse(ctx context.Context, params *TokenParams, reqEditors ...RequestEditorFn) (*TokenResponse, error)
@@ -626,8 +712,8 @@ func (c *ClientWithResponses) OpenIDConfigurationWithResponse(ctx context.Contex
 }
 
 // AuthorizeWithResponse request returning *AuthorizeResponse
-func (c *ClientWithResponses) AuthorizeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthorizeResponse, error) {
-	rsp, err := c.Authorize(ctx, reqEditors...)
+func (c *ClientWithResponses) AuthorizeWithResponse(ctx context.Context, params *AuthorizeParams, reqEditors ...RequestEditorFn) (*AuthorizeResponse, error) {
+	rsp, err := c.Authorize(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

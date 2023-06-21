@@ -79,6 +79,52 @@ paths:
       summary: Authentication Request
       description: Authentication Request
       operationId: authorize
+      parameters:
+        - name: response_type
+          in: query
+          description: response_type
+          schema:
+            type: string
+            enum:
+              - code
+              - id_token
+              - token
+              - code id_token
+              - code token
+              - id_token token
+              - code id_token token
+        - name: scope
+          in: query
+          description: scope
+          schema:
+            type: string
+            enum:
+              - openid
+              - profile
+              - email
+              - address
+              - phone
+              - offline_access
+        - name: client_id
+          in: query
+          description: client_id
+          schema:
+            type: string
+            format: uri
+            example: client_id
+        - name: state
+          in: query
+          description: state
+          schema:
+            type: string
+            example: state
+        - name: redirect_uri
+          in: query
+          description: http://localhost:1234/rp/auth/callback
+          schema:
+            type: string
+            format: uri
+            example: http://localhost:1234/rp/auth/callback
       responses:
         '302':
           description: Found
