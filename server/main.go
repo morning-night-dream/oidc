@@ -106,7 +106,14 @@ func (hdl *Handler) OpenIDConfiguration(
 	op.OpenIDConfiguration(w, r)
 }
 
-func (hdl *Handler) Auth(
+func (hdl *Handler) Token(
+	w http.ResponseWriter,
+	r *http.Request,
+	params openapi.TokenParams,
+) {
+}
+
+func (hdl *Handler) Authorize(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {

@@ -7,11 +7,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/go-chi/chi/v5"
 )
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Sign In
+	// (POST /id/signin)
+	SignIn(w http.ResponseWriter, r *http.Request)
 	// Sign Up
 	// (POST /id/signup)
 	SignUp(w http.ResponseWriter, r *http.Request)
@@ -19,8 +23,11 @@ type ServerInterface interface {
 	// (GET /op/.well-known/openid-configuration)
 	OpenIDConfiguration(w http.ResponseWriter, r *http.Request)
 	// Authentication Request
-	// (GET /op/auth)
-	Auth(w http.ResponseWriter, r *http.Request)
+	// (GET /op/authorize)
+	Authorize(w http.ResponseWriter, r *http.Request)
+	// Token Request
+	// (POST /op/token)
+	Token(w http.ResponseWriter, r *http.Request, params TokenParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -31,6 +38,21 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// SignIn operation middleware
+func (siw *ServerInterfaceWrapper) SignIn(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SignIn(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // SignUp operation middleware
 func (siw *ServerInterfaceWrapper) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -62,12 +84,56 @@ func (siw *ServerInterfaceWrapper) OpenIDConfiguration(w http.ResponseWriter, r 
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// Auth operation middleware
-func (siw *ServerInterfaceWrapper) Auth(w http.ResponseWriter, r *http.Request) {
+// Authorize operation middleware
+func (siw *ServerInterfaceWrapper) Authorize(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.Auth(w, r)
+		siw.Handler.Authorize(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// Token operation middleware
+func (siw *ServerInterfaceWrapper) Token(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TokenParams
+
+	// ------------- Optional query parameter "grant_type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "grant_type", r.URL.Query(), &params.GrantType)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "grant_type", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "code" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "code", r.URL.Query(), &params.Code)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "code", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "redirect_uri" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "redirect_uri", r.URL.Query(), &params.RedirectUri)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redirect_uri", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Token(w, r, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -191,13 +257,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/id/signin", wrapper.SignIn)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/id/signup", wrapper.SignUp)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/.well-known/openid-configuration", wrapper.OpenIDConfiguration)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/op/auth", wrapper.Auth)
+		r.Get(options.BaseURL+"/op/authorize", wrapper.Authorize)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/op/token", wrapper.Token)
 	})
 
 	return r

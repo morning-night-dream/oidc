@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 )
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
@@ -87,6 +89,11 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// SignIn request with any body
+	SignInWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SignIn(ctx context.Context, body SignInJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// SignUp request with any body
 	SignUpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -95,8 +102,35 @@ type ClientInterface interface {
 	// OpenIDConfiguration request
 	OpenIDConfiguration(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// Auth request
-	Auth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// Authorize request
+	Authorize(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// Token request
+	Token(ctx context.Context, params *TokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) SignInWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSignInRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SignIn(ctx context.Context, body SignInJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSignInRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) SignUpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -135,8 +169,8 @@ func (c *Client) OpenIDConfiguration(ctx context.Context, reqEditors ...RequestE
 	return c.Client.Do(req)
 }
 
-func (c *Client) Auth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAuthRequest(c.Server)
+func (c *Client) Authorize(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuthorizeRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -145,6 +179,58 @@ func (c *Client) Auth(ctx context.Context, reqEditors ...RequestEditorFn) (*http
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+func (c *Client) Token(ctx context.Context, params *TokenParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTokenRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewSignInRequest calls the generic SignIn builder with application/json body
+func NewSignInRequest(server string, body SignInJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSignInRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSignInRequestWithBody generates requests for SignIn with any type of body
+func NewSignInRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/id/signin")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewSignUpRequest calls the generic SignUp builder with application/json body
@@ -214,8 +300,8 @@ func NewOpenIDConfigurationRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewAuthRequest generates requests for Auth
-func NewAuthRequest(server string) (*http.Request, error) {
+// NewAuthorizeRequest generates requests for Authorize
+func NewAuthorizeRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -223,7 +309,7 @@ func NewAuthRequest(server string) (*http.Request, error) {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/op/auth")
+	operationPath := fmt.Sprintf("/op/authorize")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -234,6 +320,87 @@ func NewAuthRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTokenRequest generates requests for Token
+func NewTokenRequest(server string, params *TokenParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/op/token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.GrantType != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "grant_type", runtime.ParamLocationQuery, *params.GrantType); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Code != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "code", runtime.ParamLocationQuery, *params.Code); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.RedirectUri != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "redirect_uri", runtime.ParamLocationQuery, *params.RedirectUri); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -284,6 +451,11 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// SignIn request with any body
+	SignInWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignInResponse, error)
+
+	SignInWithResponse(ctx context.Context, body SignInJSONRequestBody, reqEditors ...RequestEditorFn) (*SignInResponse, error)
+
 	// SignUp request with any body
 	SignUpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignUpResponse, error)
 
@@ -292,8 +464,32 @@ type ClientWithResponsesInterface interface {
 	// OpenIDConfiguration request
 	OpenIDConfigurationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpenIDConfigurationResponse, error)
 
-	// Auth request
-	AuthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthResponse, error)
+	// Authorize request
+	AuthorizeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthorizeResponse, error)
+
+	// Token request
+	TokenWithResponse(ctx context.Context, params *TokenParams, reqEditors ...RequestEditorFn) (*TokenResponse, error)
+}
+
+type SignInResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r SignInResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SignInResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type SignUpResponse struct {
@@ -320,7 +516,7 @@ func (r SignUpResponse) StatusCode() int {
 type OpenIDConfigurationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *OpenIDConfigurationSchema
+	JSON200      *OpenIDConfigurationResponseSchema
 }
 
 // Status returns HTTPResponse.Status
@@ -339,13 +535,13 @@ func (r OpenIDConfigurationResponse) StatusCode() int {
 	return 0
 }
 
-type AuthResponse struct {
+type AuthorizeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 }
 
 // Status returns HTTPResponse.Status
-func (r AuthResponse) Status() string {
+func (r AuthorizeResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -353,11 +549,54 @@ func (r AuthResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r AuthResponse) StatusCode() int {
+func (r AuthorizeResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
+}
+
+type TokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *TokenResponseSchema
+	JSON400      *struct {
+		// Error error
+		Error *string `json:"error,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r TokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// SignInWithBodyWithResponse request with arbitrary body returning *SignInResponse
+func (c *ClientWithResponses) SignInWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignInResponse, error) {
+	rsp, err := c.SignInWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSignInResponse(rsp)
+}
+
+func (c *ClientWithResponses) SignInWithResponse(ctx context.Context, body SignInJSONRequestBody, reqEditors ...RequestEditorFn) (*SignInResponse, error) {
+	rsp, err := c.SignIn(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSignInResponse(rsp)
 }
 
 // SignUpWithBodyWithResponse request with arbitrary body returning *SignUpResponse
@@ -386,13 +625,38 @@ func (c *ClientWithResponses) OpenIDConfigurationWithResponse(ctx context.Contex
 	return ParseOpenIDConfigurationResponse(rsp)
 }
 
-// AuthWithResponse request returning *AuthResponse
-func (c *ClientWithResponses) AuthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthResponse, error) {
-	rsp, err := c.Auth(ctx, reqEditors...)
+// AuthorizeWithResponse request returning *AuthorizeResponse
+func (c *ClientWithResponses) AuthorizeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AuthorizeResponse, error) {
+	rsp, err := c.Authorize(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseAuthResponse(rsp)
+	return ParseAuthorizeResponse(rsp)
+}
+
+// TokenWithResponse request returning *TokenResponse
+func (c *ClientWithResponses) TokenWithResponse(ctx context.Context, params *TokenParams, reqEditors ...RequestEditorFn) (*TokenResponse, error) {
+	rsp, err := c.Token(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTokenResponse(rsp)
+}
+
+// ParseSignInResponse parses an HTTP response from a SignInWithResponse call
+func ParseSignInResponse(rsp *http.Response) (*SignInResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SignInResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
 }
 
 // ParseSignUpResponse parses an HTTP response from a SignUpWithResponse call
@@ -426,7 +690,7 @@ func ParseOpenIDConfigurationResponse(rsp *http.Response) (*OpenIDConfigurationR
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest OpenIDConfigurationSchema
+		var dest OpenIDConfigurationResponseSchema
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -437,17 +701,53 @@ func ParseOpenIDConfigurationResponse(rsp *http.Response) (*OpenIDConfigurationR
 	return response, nil
 }
 
-// ParseAuthResponse parses an HTTP response from a AuthWithResponse call
-func ParseAuthResponse(rsp *http.Response) (*AuthResponse, error) {
+// ParseAuthorizeResponse parses an HTTP response from a AuthorizeWithResponse call
+func ParseAuthorizeResponse(rsp *http.Response) (*AuthorizeResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &AuthResponse{
+	response := &AuthorizeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseTokenResponse parses an HTTP response from a TokenWithResponse call
+func ParseTokenResponse(rsp *http.Response) (*TokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TokenResponseSchema
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest struct {
+			// Error error
+			Error *string `json:"error,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
 	}
 
 	return response, nil

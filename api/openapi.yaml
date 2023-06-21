@@ -69,16 +69,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenIDConfigurationSchema'
+                $ref: '#/components/schemas/OpenIDConfigurationResponseSchema'
         '500':
           description: Internal Server Error
-  /op/auth:
+  /op/authorize:
     get:
       tags:
         - OP
       summary: Authentication Request
       description: Authentication Request
-      operationId: auth
+      operationId: authorize
       responses:
         '302':
           description: Found
@@ -88,6 +88,56 @@ paths:
                 type: string
                 format: uri
                 example: http://localhost:1234/rp/auth/callback
+        '500':
+          description: Internal Server Error
+  /op/token:
+    post:
+      tags:
+        - OP
+      summary: Token Request
+      description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
+      operationId: token
+      parameters:
+        - name: grant_type
+          in: query
+          description: grant_type
+          schema:
+            type: string
+            enum:
+              - authorization_code
+              - refresh_token
+              - client_credentials
+              - password
+              - urn:ietf:params:oauth:grant-type:device_code
+        - name: code
+          in: query
+          description: code
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          description: http://localhost:1234/rp/auth/callback
+          schema:
+            type: string
+            format: uri
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponseSchema'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    example: invalid_request
         '500':
           description: Internal Server Error
 components:
@@ -125,7 +175,7 @@ components:
       required:
         - id
         - password
-    OpenIDConfigurationSchema:
+    OpenIDConfigurationResponseSchema:
       type: object
       properties:
         issuer:
@@ -135,9 +185,9 @@ components:
           example: http://localhost:1234/op
         authorization_endpoint:
           type: string
-          description: http://localhost:1234/op/auth
+          description: http://localhost:1234/op/authorize
           format: uri
-          example: http://localhost:1234/op/auth
+          example: http://localhost:1234/op/authorize
         token_endpoint:
           type: string
           description: http://localhost:1234/op/token
@@ -269,3 +319,67 @@ components:
         - acr_values
         - code_challenge
         - code_challenge_method
+    TokenResponseSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse
+      properties:
+        access_token:
+          type: string
+          description: access_token
+          example: access_token
+        token_type:
+          type: string
+          description: token_type
+          example: token_type
+        refresh_token:
+          type: string
+          description: refresh_token
+          example: refresh_token
+        expires_in:
+          type: integer
+          description: expires_in
+          example: 3600
+        id_token:
+          type: string
+          description: id_token
+          example: id_token
+    IDTokenSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#IDToken
+      properties:
+        iss:
+          type: string
+          description: issuer
+          example: iss
+        sub:
+          type: string
+          description: subject
+          example: sub
+        aud:
+          type: string
+          description: audience
+          example: aud
+        exp:
+          type: integer
+          description: expires_at
+          example: 1687360973
+        iat:
+          type: integer
+          description: issued_at
+          example: 1687360973
+        auth_time:
+          type: integer
+          description: auth_time
+          example: 1687360973
+        nonce:
+          type: string
+          description: nonce
+          example: nonce
+      required:
+        - iss
+        - sub
+        - aud
+        - exp
+        - iat
+        - auth_time
+        - nonce
