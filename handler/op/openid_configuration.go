@@ -12,7 +12,7 @@ func OpenIDConfiguration(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	res := openapi.OpenIDConfigurationResponseSchema{
+	res := openapi.OPOpenIDConfigurationResponseSchema{
 		Issuer:                "http://localhost:1234",
 		AuthorizationEndpoint: "http://localhost:1234/op/authorize",
 		TokenEndpoint:         "http://localhost:1234/op/token",

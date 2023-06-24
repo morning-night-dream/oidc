@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/morning-night-dream/oidc/handler/idp"
 	"github.com/morning-night-dream/oidc/handler/op"
+	"github.com/morning-night-dream/oidc/handler/rp"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
@@ -85,38 +86,45 @@ func NewHandler() http.Handler {
 	return hdl
 }
 
-func (hdl *Handler) SignUp(
+func (hdl *Handler) IdpSignUp(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 	idp.SignUp(w, r)
 }
 
-func (hdl *Handler) SignIn(
+func (hdl *Handler) IdpSignIn(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 	idp.SignIn(w, r)
 }
 
-func (hdl *Handler) OpenIDConfiguration(
+func (hdl *Handler) OpOpenIDConfiguration(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 	op.OpenIDConfiguration(w, r)
 }
 
-func (hdl *Handler) Token(
+func (hdl *Handler) OpToken(
 	w http.ResponseWriter,
 	r *http.Request,
-	params openapi.TokenParams,
+	params openapi.OpTokenParams,
 ) {
 }
 
-func (hdl *Handler) Authorize(
+func (hdl *Handler) OpAuthorize(
 	w http.ResponseWriter,
 	r *http.Request,
-	params openapi.AuthorizeParams,
+	params openapi.OpAuthorizeParams,
 ) {
 	op.Auth(w, r)
+}
+
+func (hdl *Handler) RpLogin(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	rp.Login(w, r)
 }

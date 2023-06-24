@@ -15,25 +15,25 @@ externalDocs:
 servers:
   - url: http://localhost:1234
 tags:
-  - name: ID
-    description: Identity
+  - name: IdP
+    description: Identity Provider
   - name: OP
     description: OpenID Provider
   - name: RP
     description: Relying Party
 paths:
-  /id/signup:
+  /idp/signup:
     post:
       tags:
-        - ID
+        - IdP
       summary: Sign Up
       description: Sign Up
-      operationId: signUp
+      operationId: idpSignUp
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignUpRequestSchema'
+              $ref: '#/components/schemas/IdPSignUpRequestSchema'
       responses:
         '200':
           description: OK
@@ -42,15 +42,15 @@ paths:
   /id/signin:
     post:
       tags:
-        - ID
+        - IdP
       summary: Sign In
       description: Sign In
-      operationId: signIn
+      operationId: idpSignIn
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignInRequestSchema'
+              $ref: '#/components/schemas/IdPSignInRequestSchema'
       responses:
         '200':
           description: OK
@@ -62,14 +62,14 @@ paths:
         - OP
       summary: OpenID Provider Configuration
       description: OpenID Provider Configuration
-      operationId: openIDConfiguration
+      operationId: opOpenIDConfiguration
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenIDConfigurationResponseSchema'
+                $ref: '#/components/schemas/OPOpenIDConfigurationResponseSchema'
         '500':
           description: Internal Server Error
   /op/authorize:
@@ -78,7 +78,7 @@ paths:
         - OP
       summary: Authentication Request
       description: Authentication Request
-      operationId: authorize
+      operationId: opAuthorize
       parameters:
         - name: response_type
           in: query
@@ -142,7 +142,7 @@ paths:
         - OP
       summary: Token Request
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
-      operationId: token
+      operationId: opToken
       parameters:
         - name: grant_type
           in: query
@@ -172,7 +172,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponseSchema'
+                $ref: '#/components/schemas/OPTokenResponseSchema'
         '400':
           description: Bad Request
           content:
@@ -186,6 +186,24 @@ paths:
                     example: invalid_request
         '500':
           description: Internal Server Error
+  /rp/login:
+    get:
+      tags:
+        - RP
+      summary: RP Login
+      description: RP Login
+      operationId: rpLogin
+      responses:
+        '302':
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:1234/op/authorize
+        '500':
+          description: Internal Server Error
 components:
   securitySchemes:
     apiKey:
@@ -193,7 +211,7 @@ components:
       name: api-key
       in: header
   schemas:
-    SignUpRequestSchema:
+    IdPSignUpRequestSchema:
       type: object
       properties:
         id:
@@ -207,7 +225,7 @@ components:
       required:
         - id
         - password
-    SignInRequestSchema:
+    IdPSignInRequestSchema:
       type: object
       properties:
         id:
@@ -221,7 +239,7 @@ components:
       required:
         - id
         - password
-    OpenIDConfigurationResponseSchema:
+    OPOpenIDConfigurationResponseSchema:
       type: object
       properties:
         issuer:
@@ -365,7 +383,7 @@ components:
         - acr_values
         - code_challenge
         - code_challenge_method
-    TokenResponseSchema:
+    OPTokenResponseSchema:
       type: object
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse
       properties:
