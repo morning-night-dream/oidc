@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (op *OP) Authorize(
+func (op *OP) Token(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {

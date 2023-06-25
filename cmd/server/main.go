@@ -28,7 +28,12 @@ func main() {
 		TokenURL:    "http://localhost:1234/op/token",
 	}
 
-	srv := NewServer("1234", NewHandler(rp))
+	op := &op.OP{
+		AllowClientID:    "morning-night-dream",
+		AllowRedirectURL: "http://localhost:1234/rp/callback",
+	}
+
+	srv := NewServer("1234", NewHandler(rp, op))
 
 	srv.Run()
 }
@@ -83,10 +88,12 @@ var _ openapi.ServerInterface = (*Handler)(nil)
 
 type Handler struct {
 	RP *rp.RP
+	OP *op.OP
 }
 
 func NewHandler(
 	rp *rp.RP,
+	op *op.OP,
 ) http.Handler {
 	router := chi.NewRouter()
 
@@ -95,6 +102,7 @@ func NewHandler(
 	hdl := openapi.HandlerWithOptions(
 		&Handler{
 			RP: rp,
+			OP: op,
 		},
 		openapi.ChiServerOptions{
 			BaseRouter: router,
@@ -125,7 +133,7 @@ func (hdl *Handler) OpOpenIDConfiguration(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	op.OpenIDConfiguration(w, r)
+	hdl.OP.OpenIDConfiguration(w, r)
 }
 
 func (hdl *Handler) OpToken(
@@ -133,6 +141,8 @@ func (hdl *Handler) OpToken(
 	r *http.Request,
 	params openapi.OpTokenParams,
 ) {
+	log.Printf("%+v", params)
+	hdl.OP.Token(w, r)
 }
 
 func (hdl *Handler) OpAuthorize(
@@ -141,7 +151,7 @@ func (hdl *Handler) OpAuthorize(
 	params openapi.OpAuthorizeParams,
 ) {
 	log.Printf("%+v", params)
-	op.Authorize(w, r)
+	hdl.OP.Authorize(w, r)
 }
 
 func (hdl *Handler) RpLogin(

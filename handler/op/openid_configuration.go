@@ -8,7 +8,7 @@ import (
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
-func OpenIDConfiguration(
+func (op *OP) OpenIDConfiguration(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
