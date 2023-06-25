@@ -117,6 +117,9 @@ type ClientInterface interface {
 	// OpToken request
 	OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// OpUserinfo request
+	OpUserinfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// RpCallback request
 	RpCallback(ctx context.Context, params *RpCallbackParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -234,6 +237,18 @@ func (c *Client) OpLoginView(ctx context.Context, params *OpLoginViewParams, req
 
 func (c *Client) OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewOpTokenRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) OpUserinfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpUserinfoRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -670,6 +685,33 @@ func NewOpTokenRequest(server string, params *OpTokenParams) (*http.Request, err
 	return req, nil
 }
 
+// NewOpUserinfoRequest generates requests for OpUserinfo
+func NewOpUserinfoRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/op/userinfo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewRpCallbackRequest generates requests for RpCallback
 func NewRpCallbackRequest(server string, params *RpCallbackParams) (*http.Request, error) {
 	var err error
@@ -824,6 +866,9 @@ type ClientWithResponsesInterface interface {
 
 	// OpToken request
 	OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
+
+	// OpUserinfo request
+	OpUserinfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpUserinfoResponse, error)
 
 	// RpCallback request
 	RpCallbackWithResponse(ctx context.Context, params *RpCallbackParams, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error)
@@ -1006,6 +1051,28 @@ func (r OpTokenResponse) StatusCode() int {
 	return 0
 }
 
+type OpUserinfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *OPUserInfoResponseSchema
+}
+
+// Status returns HTTPResponse.Status
+func (r OpUserinfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpUserinfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type RpCallbackResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1134,6 +1201,15 @@ func (c *ClientWithResponses) OpTokenWithResponse(ctx context.Context, params *O
 		return nil, err
 	}
 	return ParseOpTokenResponse(rsp)
+}
+
+// OpUserinfoWithResponse request returning *OpUserinfoResponse
+func (c *ClientWithResponses) OpUserinfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpUserinfoResponse, error) {
+	rsp, err := c.OpUserinfo(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpUserinfoResponse(rsp)
 }
 
 // RpCallbackWithResponse request returning *RpCallbackResponse
@@ -1306,6 +1382,32 @@ func ParseOpTokenResponse(rsp *http.Response) (*OpTokenResponse, error) {
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOpUserinfoResponse parses an HTTP response from a OpUserinfoWithResponse call
+func ParseOpUserinfoResponse(rsp *http.Response) (*OpUserinfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpUserinfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest OPUserInfoResponseSchema
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 

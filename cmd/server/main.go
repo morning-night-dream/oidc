@@ -27,6 +27,7 @@ func main() {
 		Scopes:      []string{"openid"},
 		AuthURL:     "http://localhost:1234/op/authorize",
 		TokenURL:    "http://localhost:1234/op/token",
+		UserInfoURL: "http://localhost:1234/op/userinfo",
 	}
 
 	op := &op.OP{
@@ -167,6 +168,13 @@ func (hdl *Handler) OpCallback(
 	params openapi.OpCallbackParams,
 ) {
 	hdl.OP.Callback(w, r, params)
+}
+
+func (hdl *Handler) OpUserinfo(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	hdl.OP.Userinfo(w, r)
 }
 
 func (hdl *Handler) OpToken(

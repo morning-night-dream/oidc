@@ -25,8 +25,8 @@ func (op *OP) Callback(
 	buf.WriteString(authReq.RedirectUri)
 
 	values := url.Values{
-		"code":  {"code"},  // これはなに?
-		"state": {"state"}, // これはなに?
+		"code":  {params.Id},
+		"state": {*authReq.State},
 	}
 
 	buf.WriteByte('?')

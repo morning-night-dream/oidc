@@ -12,5 +12,10 @@ func (rp *RP) Callback(
 	r *http.Request,
 	params openapi.RpCallbackParams,
 ) {
+	// token取得
+	// ここでトークンキャッシュする ???
+
+	// userinfo取得
+
 	w.Write([]byte(fmt.Sprintf("code: %s, state: %s", params.Code, params.State)))
 }

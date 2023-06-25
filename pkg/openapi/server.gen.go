@@ -4,6 +4,7 @@
 package openapi
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -37,6 +38,9 @@ type ServerInterface interface {
 	// Token Request
 	// (POST /op/token)
 	OpToken(w http.ResponseWriter, r *http.Request, params OpTokenParams)
+	// UserInfo Request
+	// (GET /op/userinfo)
+	OpUserinfo(w http.ResponseWriter, r *http.Request)
 	// RP Callback
 	// (GET /rp/callback)
 	RpCallback(w http.ResponseWriter, r *http.Request, params RpCallbackParams)
@@ -316,6 +320,23 @@ func (siw *ServerInterfaceWrapper) OpToken(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// OpUserinfo operation middleware
+func (siw *ServerInterfaceWrapper) OpUserinfo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerScopes, []string{})
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpUserinfo(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // RpCallback operation middleware
 func (siw *ServerInterfaceWrapper) RpCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -517,6 +538,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/token", wrapper.OpToken)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/op/userinfo", wrapper.OpUserinfo)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rp/callback", wrapper.RpCallback)

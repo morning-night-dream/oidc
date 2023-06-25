@@ -6,4 +6,5 @@ type RP struct {
 	Scopes      []string //
 	AuthURL     string   // OPの認証エンドポイント
 	TokenURL    string   // OPのトークンエンドポイント
+	UserInfoURL string   // OPのユーザー情報エンドポイント
 }
