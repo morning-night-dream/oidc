@@ -22,7 +22,7 @@ import (
 func main() {
 	rp := &rp.RP{
 		ClientID:    "morning-night-dream",
-		RedirectURL: "http://localhost:1234/rp/callback",
+		RedirectURI: "http://localhost:1234/rp/callback",
 		Scopes:      []string{"openid"},
 		AuthURL:     "http://localhost:1234/op/authorize",
 		TokenURL:    "http://localhost:1234/op/token",
@@ -30,7 +30,7 @@ func main() {
 
 	op := &op.OP{
 		AllowClientID:    "morning-night-dream",
-		AllowRedirectURL: "http://localhost:1234/rp/callback",
+		AllowRedirectURI: "http://localhost:1234/rp/callback",
 	}
 
 	srv := NewServer("1234", NewHandler(rp, op))

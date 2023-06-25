@@ -34,7 +34,7 @@ func (rp *RP) Login(
 	values := url.Values{
 		"response_type": {"code"},                       // Authorization Flow なので code を指定
 		"client_id":     {rp.ClientID},                  // RPを識別するためのID OPに登録してある必要がある
-		"redirect_url":  {rp.RedirectURL},               // ログイン後にリダイレクトさせるURL OPに登録してある必要がある
+		"redirect_uri":  {rp.RedirectURI},               // ログイン後にリダイレクトさせるURL OPに登録してある必要がある
 		"scope":         {strings.Join(rp.Scopes, " ")}, // RPが要求するスコープ OPに登録してある必要がある
 		"state":         {state},                        // CSRF対策のためのstate
 	}
