@@ -20,6 +20,10 @@ gen: ## Generate code.
 up: ## Make development. (build and run containers.)
 	@docker compose --project-name ${APP_NAME} --file ./.docker/compose.yaml up -d
 
+.PHONY: logs
+logs:
+	@docker logs oidc --follow
+
 .PHONY: down
 down: ## Down development. (retain containers and delete volumes.)
 	@docker compose --project-name ${APP_NAME} down --volumes
