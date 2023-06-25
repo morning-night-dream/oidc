@@ -141,8 +141,7 @@ func (hdl *Handler) OpToken(
 	r *http.Request,
 	params openapi.OpTokenParams,
 ) {
-	log.Printf("%+v", params)
-	hdl.OP.Token(w, r)
+	hdl.OP.Token(w, r, params)
 }
 
 func (hdl *Handler) OpAuthorize(
@@ -150,8 +149,7 @@ func (hdl *Handler) OpAuthorize(
 	r *http.Request,
 	params openapi.OpAuthorizeParams,
 ) {
-	log.Printf("%+v", params)
-	hdl.OP.Authorize(w, r)
+	hdl.OP.Authorize(w, r, params)
 }
 
 func (hdl *Handler) RpLogin(
