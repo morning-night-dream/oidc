@@ -204,6 +204,18 @@ paths:
                 example: http://localhost:1234/op/authorize
         '500':
           description: Internal Server Error
+  /rp/callback:
+    get:
+      tags:
+        - RP
+      summary: RP Callback
+      description: RP Callback
+      operationId: rpCallback
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
 components:
   securitySchemes:
     apiKey:

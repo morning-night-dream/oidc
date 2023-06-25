@@ -150,3 +150,10 @@ func (hdl *Handler) RpLogin(
 ) {
 	hdl.RP.Login(w, r)
 }
+
+func (hdl *Handler) RpCallback(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	hdl.RP.Callback(w, r)
+}

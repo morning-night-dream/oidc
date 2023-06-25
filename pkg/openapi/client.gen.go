@@ -108,6 +108,9 @@ type ClientInterface interface {
 	// OpToken request
 	OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// RpCallback request
+	RpCallback(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// RpLogin request
 	RpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
@@ -186,6 +189,18 @@ func (c *Client) OpAuthorize(ctx context.Context, params *OpAuthorizeParams, req
 
 func (c *Client) OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewOpTokenRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RpCallback(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRpCallbackRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -509,6 +524,33 @@ func NewOpTokenRequest(server string, params *OpTokenParams) (*http.Request, err
 	return req, nil
 }
 
+// NewRpCallbackRequest generates requests for RpCallback
+func NewRpCallbackRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/rp/callback")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewRpLoginRequest generates requests for RpLogin
 func NewRpLoginRequest(server string) (*http.Request, error) {
 	var err error
@@ -597,6 +639,9 @@ type ClientWithResponsesInterface interface {
 
 	// OpToken request
 	OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
+
+	// RpCallback request
+	RpCallbackWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error)
 
 	// RpLogin request
 	RpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpLoginResponse, error)
@@ -713,6 +758,27 @@ func (r OpTokenResponse) StatusCode() int {
 	return 0
 }
 
+type RpCallbackResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r RpCallbackResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RpCallbackResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type RpLoginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -793,6 +859,15 @@ func (c *ClientWithResponses) OpTokenWithResponse(ctx context.Context, params *O
 		return nil, err
 	}
 	return ParseOpTokenResponse(rsp)
+}
+
+// RpCallbackWithResponse request returning *RpCallbackResponse
+func (c *ClientWithResponses) RpCallbackWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error) {
+	rsp, err := c.RpCallback(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRpCallbackResponse(rsp)
 }
 
 // RpLoginWithResponse request returning *RpLoginResponse
@@ -909,6 +984,22 @@ func ParseOpTokenResponse(rsp *http.Response) (*OpTokenResponse, error) {
 		}
 		response.JSON400 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseRpCallbackResponse parses an HTTP response from a RpCallbackWithResponse call
+func ParseRpCallbackResponse(rsp *http.Response) (*RpCallbackResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RpCallbackResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil

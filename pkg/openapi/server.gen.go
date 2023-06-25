@@ -28,6 +28,9 @@ type ServerInterface interface {
 	// Token Request
 	// (POST /op/token)
 	OpToken(w http.ResponseWriter, r *http.Request, params OpTokenParams)
+	// RP Callback
+	// (GET /rp/callback)
+	RpCallback(w http.ResponseWriter, r *http.Request)
 	// RP Login
 	// (GET /rp/login)
 	RpLogin(w http.ResponseWriter, r *http.Request)
@@ -191,6 +194,21 @@ func (siw *ServerInterfaceWrapper) OpToken(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// RpCallback operation middleware
+func (siw *ServerInterfaceWrapper) RpCallback(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RpCallback(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // RpLogin operation middleware
 func (siw *ServerInterfaceWrapper) RpLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -333,6 +351,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/token", wrapper.OpToken)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/rp/callback", wrapper.RpCallback)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/rp/login", wrapper.RpLogin)
