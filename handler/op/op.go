@@ -6,7 +6,8 @@ import (
 )
 
 type OP struct {
-	AllowClientID        string
-	AllowRedirectURI     string
-	AuthorizeParamsCache *cache.Cache[openapi.OpAuthorizeParams]
+	AllowClientID         string
+	AllowRedirectURI      string
+	AuthorizeParamsCache  *cache.Cache[openapi.OpAuthorizeParams]
+	UsernamePasswordCache *cache.Cache[openapi.UsernamePassword]
 }

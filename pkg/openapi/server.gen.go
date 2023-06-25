@@ -15,11 +15,11 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Sign In
-	// (POST /id/signin)
-	IdpSignIn(w http.ResponseWriter, r *http.Request)
+	// (POST /idp/signin)
+	IdpSignin(w http.ResponseWriter, r *http.Request)
 	// Sign Up
 	// (POST /idp/signup)
-	IdpSignUp(w http.ResponseWriter, r *http.Request)
+	IdpSignup(w http.ResponseWriter, r *http.Request)
 	// OpenID Provider Configuration
 	// (GET /op/.well-known/openid-configuration)
 	OpOpenIDConfiguration(w http.ResponseWriter, r *http.Request)
@@ -58,12 +58,12 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// IdpSignIn operation middleware
-func (siw *ServerInterfaceWrapper) IdpSignIn(w http.ResponseWriter, r *http.Request) {
+// IdpSignin operation middleware
+func (siw *ServerInterfaceWrapper) IdpSignin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.IdpSignIn(w, r)
+		siw.Handler.IdpSignin(w, r)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -73,12 +73,12 @@ func (siw *ServerInterfaceWrapper) IdpSignIn(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// IdpSignUp operation middleware
-func (siw *ServerInterfaceWrapper) IdpSignUp(w http.ResponseWriter, r *http.Request) {
+// IdpSignup operation middleware
+func (siw *ServerInterfaceWrapper) IdpSignup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.IdpSignUp(w, r)
+		siw.Handler.IdpSignup(w, r)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -537,10 +537,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/id/signin", wrapper.IdpSignIn)
+		r.Post(options.BaseURL+"/idp/signin", wrapper.IdpSignin)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/idp/signup", wrapper.IdpSignUp)
+		r.Post(options.BaseURL+"/idp/signup", wrapper.IdpSignup)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/.well-known/openid-configuration", wrapper.OpOpenIDConfiguration)

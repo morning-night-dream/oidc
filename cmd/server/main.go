@@ -118,18 +118,18 @@ func NewHandler(
 	return hdl
 }
 
-func (hdl *Handler) IdpSignUp(
+func (hdl *Handler) IdpSignup(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	idp.SignUp(w, r)
+	idp.Signup(w, r)
 }
 
-func (hdl *Handler) IdpSignIn(
+func (hdl *Handler) IdpSignin(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	idp.SignIn(w, r)
+	idp.Signin(w, r)
 }
 
 func (hdl *Handler) OpOpenIDConfiguration(

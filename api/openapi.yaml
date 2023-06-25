@@ -28,29 +28,29 @@ paths:
         - IdP
       summary: Sign Up
       description: Sign Up
-      operationId: idpSignUp
+      operationId: idpSignup
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IdPSignUpRequestSchema'
+              $ref: '#/components/schemas/UsernamePassword'
       responses:
         '200':
           description: OK
         '500':
           description: Internal Server Error
-  /id/signin:
+  /idp/signin:
     post:
       tags:
         - IdP
       summary: Sign In
       description: Sign In
-      operationId: idpSignIn
+      operationId: idpSignin
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IdPSignInRequestSchema'
+              $ref: '#/components/schemas/UsernamePassword'
       responses:
         '200':
           description: OK
@@ -322,33 +322,19 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    IdPSignUpRequestSchema:
+    UsernamePassword:
       type: object
       properties:
-        id:
+        username:
           type: string
-          description: id
-          example: id
+          description: username
+          example: username
         password:
           type: string
           description: password
           example: password
       required:
-        - id
-        - password
-    IdPSignInRequestSchema:
-      type: object
-      properties:
-        id:
-          type: string
-          description: id
-          example: id
-        password:
-          type: string
-          description: password
-          example: password
-      required:
-        - id
+        - username
         - password
     OPOpenIDConfigurationResponseSchema:
       type: object
@@ -384,25 +370,6 @@ components:
         - token_endpoint
         - userinfo_endpoint
         - revocation_endpoint
-    OPLoginRequestSchema:
-      type: object
-      properties:
-        id:
-          type: string
-          description: id
-          example: id
-        username:
-          type: string
-          description: username
-          example: username
-        password:
-          type: string
-          description: password
-          example: password
-      required:
-        - id
-        - username
-        - password
     OPTokenResponseSchema:
       type: object
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse

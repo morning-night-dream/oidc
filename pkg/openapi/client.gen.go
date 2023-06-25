@@ -89,15 +89,15 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// IdpSignIn request with any body
-	IdpSignInWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// IdpSignin request with any body
+	IdpSigninWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	IdpSignIn(ctx context.Context, body IdpSignInJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	IdpSignin(ctx context.Context, body IdpSigninJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// IdpSignUp request with any body
-	IdpSignUpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// IdpSignup request with any body
+	IdpSignupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	IdpSignUp(ctx context.Context, body IdpSignUpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	IdpSignup(ctx context.Context, body IdpSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// OpOpenIDConfiguration request
 	OpOpenIDConfiguration(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -127,8 +127,8 @@ type ClientInterface interface {
 	RpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) IdpSignInWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewIdpSignInRequestWithBody(c.Server, contentType, body)
+func (c *Client) IdpSigninWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewIdpSigninRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +139,8 @@ func (c *Client) IdpSignInWithBody(ctx context.Context, contentType string, body
 	return c.Client.Do(req)
 }
 
-func (c *Client) IdpSignIn(ctx context.Context, body IdpSignInJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewIdpSignInRequest(c.Server, body)
+func (c *Client) IdpSignin(ctx context.Context, body IdpSigninJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewIdpSigninRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +151,8 @@ func (c *Client) IdpSignIn(ctx context.Context, body IdpSignInJSONRequestBody, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) IdpSignUpWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewIdpSignUpRequestWithBody(c.Server, contentType, body)
+func (c *Client) IdpSignupWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewIdpSignupRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +163,8 @@ func (c *Client) IdpSignUpWithBody(ctx context.Context, contentType string, body
 	return c.Client.Do(req)
 }
 
-func (c *Client) IdpSignUp(ctx context.Context, body IdpSignUpJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewIdpSignUpRequest(c.Server, body)
+func (c *Client) IdpSignup(ctx context.Context, body IdpSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewIdpSignupRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -283,19 +283,19 @@ func (c *Client) RpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*h
 	return c.Client.Do(req)
 }
 
-// NewIdpSignInRequest calls the generic IdpSignIn builder with application/json body
-func NewIdpSignInRequest(server string, body IdpSignInJSONRequestBody) (*http.Request, error) {
+// NewIdpSigninRequest calls the generic IdpSignin builder with application/json body
+func NewIdpSigninRequest(server string, body IdpSigninJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewIdpSignInRequestWithBody(server, "application/json", bodyReader)
+	return NewIdpSigninRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewIdpSignInRequestWithBody generates requests for IdpSignIn with any type of body
-func NewIdpSignInRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewIdpSigninRequestWithBody generates requests for IdpSignin with any type of body
+func NewIdpSigninRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -303,7 +303,7 @@ func NewIdpSignInRequestWithBody(server string, contentType string, body io.Read
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/id/signin")
+	operationPath := fmt.Sprintf("/idp/signin")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -323,19 +323,19 @@ func NewIdpSignInRequestWithBody(server string, contentType string, body io.Read
 	return req, nil
 }
 
-// NewIdpSignUpRequest calls the generic IdpSignUp builder with application/json body
-func NewIdpSignUpRequest(server string, body IdpSignUpJSONRequestBody) (*http.Request, error) {
+// NewIdpSignupRequest calls the generic IdpSignup builder with application/json body
+func NewIdpSignupRequest(server string, body IdpSignupJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewIdpSignUpRequestWithBody(server, "application/json", bodyReader)
+	return NewIdpSignupRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewIdpSignUpRequestWithBody generates requests for IdpSignUp with any type of body
-func NewIdpSignUpRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewIdpSignupRequestWithBody generates requests for IdpSignup with any type of body
+func NewIdpSignupRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -827,15 +827,15 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// IdpSignIn request with any body
-	IdpSignInWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSignInResponse, error)
+	// IdpSignin request with any body
+	IdpSigninWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSigninResponse, error)
 
-	IdpSignInWithResponse(ctx context.Context, body IdpSignInJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSignInResponse, error)
+	IdpSigninWithResponse(ctx context.Context, body IdpSigninJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSigninResponse, error)
 
-	// IdpSignUp request with any body
-	IdpSignUpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSignUpResponse, error)
+	// IdpSignup request with any body
+	IdpSignupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSignupResponse, error)
 
-	IdpSignUpWithResponse(ctx context.Context, body IdpSignUpJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSignUpResponse, error)
+	IdpSignupWithResponse(ctx context.Context, body IdpSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSignupResponse, error)
 
 	// OpOpenIDConfiguration request
 	OpOpenIDConfigurationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpOpenIDConfigurationResponse, error)
@@ -865,13 +865,13 @@ type ClientWithResponsesInterface interface {
 	RpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpLoginResponse, error)
 }
 
-type IdpSignInResponse struct {
+type IdpSigninResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 }
 
 // Status returns HTTPResponse.Status
-func (r IdpSignInResponse) Status() string {
+func (r IdpSigninResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -879,20 +879,20 @@ func (r IdpSignInResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r IdpSignInResponse) StatusCode() int {
+func (r IdpSigninResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type IdpSignUpResponse struct {
+type IdpSignupResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 }
 
 // Status returns HTTPResponse.Status
-func (r IdpSignUpResponse) Status() string {
+func (r IdpSignupResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -900,7 +900,7 @@ func (r IdpSignUpResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r IdpSignUpResponse) StatusCode() int {
+func (r IdpSignupResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1103,38 +1103,38 @@ func (r RpLoginResponse) StatusCode() int {
 	return 0
 }
 
-// IdpSignInWithBodyWithResponse request with arbitrary body returning *IdpSignInResponse
-func (c *ClientWithResponses) IdpSignInWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSignInResponse, error) {
-	rsp, err := c.IdpSignInWithBody(ctx, contentType, body, reqEditors...)
+// IdpSigninWithBodyWithResponse request with arbitrary body returning *IdpSigninResponse
+func (c *ClientWithResponses) IdpSigninWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSigninResponse, error) {
+	rsp, err := c.IdpSigninWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseIdpSignInResponse(rsp)
+	return ParseIdpSigninResponse(rsp)
 }
 
-func (c *ClientWithResponses) IdpSignInWithResponse(ctx context.Context, body IdpSignInJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSignInResponse, error) {
-	rsp, err := c.IdpSignIn(ctx, body, reqEditors...)
+func (c *ClientWithResponses) IdpSigninWithResponse(ctx context.Context, body IdpSigninJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSigninResponse, error) {
+	rsp, err := c.IdpSignin(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseIdpSignInResponse(rsp)
+	return ParseIdpSigninResponse(rsp)
 }
 
-// IdpSignUpWithBodyWithResponse request with arbitrary body returning *IdpSignUpResponse
-func (c *ClientWithResponses) IdpSignUpWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSignUpResponse, error) {
-	rsp, err := c.IdpSignUpWithBody(ctx, contentType, body, reqEditors...)
+// IdpSignupWithBodyWithResponse request with arbitrary body returning *IdpSignupResponse
+func (c *ClientWithResponses) IdpSignupWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*IdpSignupResponse, error) {
+	rsp, err := c.IdpSignupWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseIdpSignUpResponse(rsp)
+	return ParseIdpSignupResponse(rsp)
 }
 
-func (c *ClientWithResponses) IdpSignUpWithResponse(ctx context.Context, body IdpSignUpJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSignUpResponse, error) {
-	rsp, err := c.IdpSignUp(ctx, body, reqEditors...)
+func (c *ClientWithResponses) IdpSignupWithResponse(ctx context.Context, body IdpSignupJSONRequestBody, reqEditors ...RequestEditorFn) (*IdpSignupResponse, error) {
+	rsp, err := c.IdpSignup(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseIdpSignUpResponse(rsp)
+	return ParseIdpSignupResponse(rsp)
 }
 
 // OpOpenIDConfigurationWithResponse request returning *OpOpenIDConfigurationResponse
@@ -1218,15 +1218,15 @@ func (c *ClientWithResponses) RpLoginWithResponse(ctx context.Context, reqEditor
 	return ParseRpLoginResponse(rsp)
 }
 
-// ParseIdpSignInResponse parses an HTTP response from a IdpSignInWithResponse call
-func ParseIdpSignInResponse(rsp *http.Response) (*IdpSignInResponse, error) {
+// ParseIdpSigninResponse parses an HTTP response from a IdpSigninWithResponse call
+func ParseIdpSigninResponse(rsp *http.Response) (*IdpSigninResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &IdpSignInResponse{
+	response := &IdpSigninResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1234,15 +1234,15 @@ func ParseIdpSignInResponse(rsp *http.Response) (*IdpSignInResponse, error) {
 	return response, nil
 }
 
-// ParseIdpSignUpResponse parses an HTTP response from a IdpSignUpWithResponse call
-func ParseIdpSignUpResponse(rsp *http.Response) (*IdpSignUpResponse, error) {
+// ParseIdpSignupResponse parses an HTTP response from a IdpSignupWithResponse call
+func ParseIdpSignupResponse(rsp *http.Response) (*IdpSignupResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &IdpSignUpResponse{
+	response := &IdpSignupResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
