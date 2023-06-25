@@ -37,6 +37,24 @@ const (
 	UrnIetfParamsOauthGrantTypeDeviceCode OpTokenParamsGrantType = "urn:ietf:params:oauth:grant-type:device_code"
 )
 
+// IdPSigninRequestSchema defines model for IdPSigninRequestSchema.
+type IdPSigninRequestSchema struct {
+	// Password password
+	Password string `json:"password"`
+
+	// Username username
+	Username string `json:"username"`
+}
+
+// IdPSignupRequestSchema defines model for IdPSignupRequestSchema.
+type IdPSignupRequestSchema struct {
+	// Password password
+	Password string `json:"password"`
+
+	// Username username
+	Username string `json:"username"`
+}
+
 // OPOpenIDConfigurationResponseSchema defines model for OPOpenIDConfigurationResponseSchema.
 type OPOpenIDConfigurationResponseSchema struct {
 	// AuthorizationEndpoint http://localhost:1234/op/authorize
@@ -89,15 +107,6 @@ type OPUserInfoResponseSchema struct {
 
 	// Sub sub
 	Sub string `json:"sub"`
-}
-
-// UsernamePassword defines model for UsernamePassword.
-type UsernamePassword struct {
-	// Password password
-	Password string `json:"password"`
-
-	// Username username
-	Username string `json:"username"`
 }
 
 // OpAuthorizeParams defines parameters for OpAuthorize.
@@ -161,7 +170,7 @@ type RpCallbackParams struct {
 }
 
 // IdpSigninJSONRequestBody defines body for IdpSignin for application/json ContentType.
-type IdpSigninJSONRequestBody = UsernamePassword
+type IdpSigninJSONRequestBody = IdPSigninRequestSchema
 
 // IdpSignupJSONRequestBody defines body for IdpSignup for application/json ContentType.
-type IdpSignupJSONRequestBody = UsernamePassword
+type IdpSignupJSONRequestBody = IdPSignupRequestSchema

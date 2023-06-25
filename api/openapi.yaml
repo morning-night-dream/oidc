@@ -33,7 +33,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsernamePassword'
+              $ref: '#/components/schemas/IdPSignupRequestSchema'
       responses:
         '200':
           description: OK
@@ -50,7 +50,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsernamePassword'
+              $ref: '#/components/schemas/IdPSigninRequestSchema'
       responses:
         '200':
           description: OK
@@ -322,7 +322,21 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    UsernamePassword:
+    IdPSignupRequestSchema:
+      type: object
+      properties:
+        username:
+          type: string
+          description: username
+          example: username
+        password:
+          type: string
+          description: password
+          example: password
+      required:
+        - username
+        - password
+    IdPSigninRequestSchema:
       type: object
       properties:
         username:

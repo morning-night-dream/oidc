@@ -2,12 +2,14 @@ package op
 
 import (
 	"github.com/morning-night-dream/oidc/cache"
+	"github.com/morning-night-dream/oidc/model"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
 type OP struct {
-	AllowClientID         string
-	AllowRedirectURI      string
-	AuthorizeParamsCache  *cache.Cache[openapi.OpAuthorizeParams]
-	UsernamePasswordCache *cache.Cache[openapi.UsernamePassword]
+	AllowClientID        string
+	AllowRedirectURI     string
+	AuthorizeParamsCache *cache.Cache[openapi.OpAuthorizeParams]
+	UserCache            *cache.Cache[model.User]
+	LoggedInUserCache    *cache.Cache[model.User]
 }

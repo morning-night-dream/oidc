@@ -17,14 +17,21 @@ import (
 	"github.com/morning-night-dream/oidc/handler/op"
 	"github.com/morning-night-dream/oidc/handler/rp"
 	"github.com/morning-night-dream/oidc/middleware"
+	"github.com/morning-night-dream/oidc/model"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
 func main() {
-	upc := cache.New[openapi.UsernamePassword]()
+	user := cache.New[model.User]()
+
+	user.Set("username", model.User{
+		ID:       "id",
+		Username: "username",
+		Password: "password",
+	})
 
 	idp := &idp.IdP{
-		UsernamePasswordCache: upc,
+		UserCache: user,
 	}
 
 	rp := &rp.RP{
@@ -37,10 +44,11 @@ func main() {
 	}
 
 	op := &op.OP{
-		AllowClientID:         "morning-night-dream",
-		AllowRedirectURI:      "http://localhost:1234/rp/callback",
-		AuthorizeParamsCache:  cache.New[openapi.OpAuthorizeParams](),
-		UsernamePasswordCache: upc,
+		AllowClientID:        "morning-night-dream",
+		AllowRedirectURI:     "http://localhost:1234/rp/callback",
+		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),
+		UserCache:            user,
+		LoggedInUserCache:    cache.New[model.User](),
 	}
 
 	srv := NewServer("1234", NewHandler(idp, rp, op))

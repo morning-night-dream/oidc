@@ -25,9 +25,22 @@ func (op *OP) Login(
 
 	log.Printf("%s, %s, %s", id, username, password)
 
-	// TODO: usernameとpasswordの検証
+	// usernameとpasswordの検証
+	user, err := op.UserCache.Get(username)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
-	// id でログインに成功していることをキャッシュに保存しておく
+		return
+	}
+
+	if user.Password != password {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+
+		return
+	}
+
+	// user がログインに成功していることをキャッシュに保存しておく
+	op.LoggedInUserCache.Set(id, user)
 
 	var buf bytes.Buffer
 
