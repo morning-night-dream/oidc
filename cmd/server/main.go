@@ -161,6 +161,14 @@ func (hdl *Handler) OpLogin(
 	hdl.OP.Login(w, r)
 }
 
+func (hdl *Handler) OpCallback(
+	w http.ResponseWriter,
+	r *http.Request,
+	params openapi.OpCallbackParams,
+) {
+	hdl.OP.Callback(w, r, params)
+}
+
 func (hdl *Handler) OpToken(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -179,6 +187,7 @@ func (hdl *Handler) RpLogin(
 func (hdl *Handler) RpCallback(
 	w http.ResponseWriter,
 	r *http.Request,
+	params openapi.RpCallbackParams,
 ) {
-	hdl.RP.Callback(w, r)
+	hdl.RP.Callback(w, r, params)
 }

@@ -105,6 +105,9 @@ type ClientInterface interface {
 	// OpAuthorize request
 	OpAuthorize(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// OpCallback request
+	OpCallback(ctx context.Context, params *OpCallbackParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// OpLogin request
 	OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -115,7 +118,7 @@ type ClientInterface interface {
 	OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RpCallback request
-	RpCallback(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	RpCallback(ctx context.Context, params *RpCallbackParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RpLogin request
 	RpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -193,6 +196,18 @@ func (c *Client) OpAuthorize(ctx context.Context, params *OpAuthorizeParams, req
 	return c.Client.Do(req)
 }
 
+func (c *Client) OpCallback(ctx context.Context, params *OpCallbackParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpCallbackRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewOpLoginRequest(c.Server)
 	if err != nil {
@@ -229,8 +244,8 @@ func (c *Client) OpToken(ctx context.Context, params *OpTokenParams, reqEditors 
 	return c.Client.Do(req)
 }
 
-func (c *Client) RpCallback(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRpCallbackRequest(c.Server)
+func (c *Client) RpCallback(ctx context.Context, params *RpCallbackParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRpCallbackRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -457,6 +472,51 @@ func NewOpAuthorizeRequest(server string, params *OpAuthorizeParams) (*http.Requ
 	return req, nil
 }
 
+// NewOpCallbackRequest generates requests for OpCallback
+func NewOpCallbackRequest(server string, params *OpCallbackParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/op/callback")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "id", runtime.ParamLocationQuery, params.Id); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewOpLoginRequest generates requests for OpLogin
 func NewOpLoginRequest(server string) (*http.Request, error) {
 	var err error
@@ -611,7 +671,7 @@ func NewOpTokenRequest(server string, params *OpTokenParams) (*http.Request, err
 }
 
 // NewRpCallbackRequest generates requests for RpCallback
-func NewRpCallbackRequest(server string) (*http.Request, error) {
+func NewRpCallbackRequest(server string, params *RpCallbackParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -627,6 +687,36 @@ func NewRpCallbackRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "code", runtime.ParamLocationQuery, params.Code); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "state", runtime.ParamLocationQuery, params.State); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -723,6 +813,9 @@ type ClientWithResponsesInterface interface {
 	// OpAuthorize request
 	OpAuthorizeWithResponse(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*OpAuthorizeResponse, error)
 
+	// OpCallback request
+	OpCallbackWithResponse(ctx context.Context, params *OpCallbackParams, reqEditors ...RequestEditorFn) (*OpCallbackResponse, error)
+
 	// OpLogin request
 	OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error)
 
@@ -733,7 +826,7 @@ type ClientWithResponsesInterface interface {
 	OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
 
 	// RpCallback request
-	RpCallbackWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error)
+	RpCallbackWithResponse(ctx context.Context, params *RpCallbackParams, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error)
 
 	// RpLogin request
 	RpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpLoginResponse, error)
@@ -818,6 +911,27 @@ func (r OpAuthorizeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r OpAuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type OpCallbackResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r OpCallbackResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpCallbackResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -986,6 +1100,15 @@ func (c *ClientWithResponses) OpAuthorizeWithResponse(ctx context.Context, param
 	return ParseOpAuthorizeResponse(rsp)
 }
 
+// OpCallbackWithResponse request returning *OpCallbackResponse
+func (c *ClientWithResponses) OpCallbackWithResponse(ctx context.Context, params *OpCallbackParams, reqEditors ...RequestEditorFn) (*OpCallbackResponse, error) {
+	rsp, err := c.OpCallback(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpCallbackResponse(rsp)
+}
+
 // OpLoginWithResponse request returning *OpLoginResponse
 func (c *ClientWithResponses) OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error) {
 	rsp, err := c.OpLogin(ctx, reqEditors...)
@@ -1014,8 +1137,8 @@ func (c *ClientWithResponses) OpTokenWithResponse(ctx context.Context, params *O
 }
 
 // RpCallbackWithResponse request returning *RpCallbackResponse
-func (c *ClientWithResponses) RpCallbackWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error) {
-	rsp, err := c.RpCallback(ctx, reqEditors...)
+func (c *ClientWithResponses) RpCallbackWithResponse(ctx context.Context, params *RpCallbackParams, reqEditors ...RequestEditorFn) (*RpCallbackResponse, error) {
+	rsp, err := c.RpCallback(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1098,6 +1221,22 @@ func ParseOpAuthorizeResponse(rsp *http.Response) (*OpAuthorizeResponse, error) 
 	}
 
 	response := &OpAuthorizeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseOpCallbackResponse parses an HTTP response from a OpCallbackWithResponse call
+func ParseOpCallbackResponse(rsp *http.Response) (*OpCallbackResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpCallbackResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

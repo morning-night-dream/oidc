@@ -1,9 +1,11 @@
 package op
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 func (op *OP) Login(
@@ -25,9 +27,21 @@ func (op *OP) Login(
 
 	// TODO: usernameとpasswordの検証
 
-	val, _ := op.AuthorizeParamsCache.Get(id)
+	// id でログインに成功していることをキャッシュに保存しておく
 
-	url := val.RedirectUri
+	var buf bytes.Buffer
+
+	buf.WriteString("http://localhost:1234/op/callback")
+
+	values := url.Values{
+		"id": {id},
+	}
+
+	buf.WriteByte('?')
+
+	buf.WriteString(values.Encode())
+
+	url := buf.String()
 
 	http.Redirect(w, r, url, http.StatusFound)
 }

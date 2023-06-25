@@ -25,6 +25,9 @@ type ServerInterface interface {
 	// Authentication Request
 	// (GET /op/authorize)
 	OpAuthorize(w http.ResponseWriter, r *http.Request, params OpAuthorizeParams)
+	// OP Callback
+	// (GET /op/callback)
+	OpCallback(w http.ResponseWriter, r *http.Request, params OpCallbackParams)
 	// OP Login
 	// (POST /op/login)
 	OpLogin(w http.ResponseWriter, r *http.Request)
@@ -36,7 +39,7 @@ type ServerInterface interface {
 	OpToken(w http.ResponseWriter, r *http.Request, params OpTokenParams)
 	// RP Callback
 	// (GET /rp/callback)
-	RpCallback(w http.ResponseWriter, r *http.Request)
+	RpCallback(w http.ResponseWriter, r *http.Request, params RpCallbackParams)
 	// RP Login
 	// (GET /rp/login)
 	RpLogin(w http.ResponseWriter, r *http.Request)
@@ -184,6 +187,41 @@ func (siw *ServerInterfaceWrapper) OpAuthorize(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// OpCallback operation middleware
+func (siw *ServerInterfaceWrapper) OpCallback(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params OpCallbackParams
+
+	// ------------- Required query parameter "id" -------------
+
+	if paramValue := r.URL.Query().Get("id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "id"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "id", r.URL.Query(), &params.Id)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpCallback(w, r, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // OpLogin operation middleware
 func (siw *ServerInterfaceWrapper) OpLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -282,8 +320,43 @@ func (siw *ServerInterfaceWrapper) OpToken(w http.ResponseWriter, r *http.Reques
 func (siw *ServerInterfaceWrapper) RpCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RpCallbackParams
+
+	// ------------- Required query parameter "code" -------------
+
+	if paramValue := r.URL.Query().Get("code"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "code"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "code", r.URL.Query(), &params.Code)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "code", Err: err})
+		return
+	}
+
+	// ------------- Required query parameter "state" -------------
+
+	if paramValue := r.URL.Query().Get("state"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "state", r.URL.Query(), &params.State)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.RpCallback(w, r)
+		siw.Handler.RpCallback(w, r, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -432,6 +505,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/authorize", wrapper.OpAuthorize)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/op/callback", wrapper.OpCallback)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/login", wrapper.OpLogin)

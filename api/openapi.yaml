@@ -173,6 +173,32 @@ paths:
           description: OK
         '500':
           description: Internal Server Error
+  /op/callback:
+    get:
+      tags:
+        - OP
+      summary: OP Callback
+      description: OP Callback
+      operationId: opCallback
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: id
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        '302':
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:1234/rp/callback
+        '500':
+          description: Internal Server Error
   /op/token:
     post:
       tags:
@@ -199,7 +225,7 @@ paths:
             type: string
         - name: redirect_uri
           in: query
-          description: http://localhost:1234/rp/auth/callback
+          description: http://localhost:1234/rp/callback
           schema:
             type: string
             format: uri
@@ -248,6 +274,21 @@ paths:
       summary: RP Callback
       description: RP Callback
       operationId: rpCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: code
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        - name: state
+          in: query
+          required: true
+          description: state
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
       responses:
         '200':
           description: OK

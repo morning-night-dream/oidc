@@ -111,6 +111,12 @@ type OpAuthorizeParamsResponseType string
 // OpAuthorizeParamsScope defines parameters for OpAuthorize.
 type OpAuthorizeParamsScope string
 
+// OpCallbackParams defines parameters for OpCallback.
+type OpCallbackParams struct {
+	// Id id
+	Id string `form:"id" json:"id"`
+}
+
 // OpLoginViewParams defines parameters for OpLoginView.
 type OpLoginViewParams struct {
 	// AuthRequestId auth request id
@@ -125,12 +131,21 @@ type OpTokenParams struct {
 	// Code code
 	Code *string `form:"code,omitempty" json:"code,omitempty"`
 
-	// RedirectUri http://localhost:1234/rp/auth/callback
+	// RedirectUri http://localhost:1234/rp/callback
 	RedirectUri *string `form:"redirect_uri,omitempty" json:"redirect_uri,omitempty"`
 }
 
 // OpTokenParamsGrantType defines parameters for OpToken.
 type OpTokenParamsGrantType string
+
+// RpCallbackParams defines parameters for RpCallback.
+type RpCallbackParams struct {
+	// Code code
+	Code string `form:"code" json:"code"`
+
+	// State state
+	State string `form:"state" json:"state"`
+}
 
 // IdpSignInJSONRequestBody defines body for IdpSignIn for application/json ContentType.
 type IdpSignInJSONRequestBody = IdPSignInRequestSchema

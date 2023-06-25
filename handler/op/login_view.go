@@ -23,6 +23,7 @@ func (op *OP) LoginView(
 	if err != nil {
 		errMsg = err.Error()
 	}
+
 	data := &struct {
 		ID    string
 		Error string
@@ -30,6 +31,7 @@ func (op *OP) LoginView(
 		ID:    params.AuthRequestId,
 		Error: errMsg,
 	}
+
 	if err = loginTmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
