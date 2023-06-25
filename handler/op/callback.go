@@ -36,6 +36,4 @@ func (op *OP) Callback(
 	url := buf.String()
 
 	http.Redirect(w, r, url, http.StatusFound)
-
-	w.Write([]byte(params.Id))
 }
