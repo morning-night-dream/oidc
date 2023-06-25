@@ -2,7 +2,6 @@ package rp
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -46,11 +45,4 @@ func (rp *RP) Login(
 	url := buf.String()
 
 	http.Redirect(w, r, url, http.StatusFound)
-}
-
-func (rp *RP) Callback(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	log.Printf("%+v", r.URL.Query())
 }

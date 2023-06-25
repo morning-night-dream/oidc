@@ -22,4 +22,12 @@ func (op *OP) Login(
 	password := r.FormValue("password")
 
 	log.Printf("%s, %s, %s", id, username, password)
+
+	// TODO: usernameとpasswordの検証
+
+	val, _ := op.AuthorizeParamsCache.Get(id)
+
+	url := val.RedirectUri
+
+	http.Redirect(w, r, url, http.StatusFound)
 }
