@@ -20,6 +20,10 @@ gen: ## Generate code.
 up: ## Make development. (build and run containers.)
 	@docker compose --project-name ${APP_NAME} --file ./.docker/compose.yaml up -d
 
+.PHONY: reup
+reup:
+	@touch ./cmd/server/main.go
+
 .PHONY: logs
 logs:
 	@docker logs oidc --follow

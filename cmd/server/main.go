@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -16,12 +15,20 @@ import (
 	"github.com/morning-night-dream/oidc/handler/idp"
 	"github.com/morning-night-dream/oidc/handler/op"
 	"github.com/morning-night-dream/oidc/handler/rp"
+	"github.com/morning-night-dream/oidc/middleware"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
-	"go.uber.org/zap"
 )
 
 func main() {
-	srv := NewServer("1234", NewHandler())
+	rp := &rp.RP{
+		ClientID:    "morning-night-dream",
+		RedirectURL: "http://localhost:1234/rp/callback",
+		Scopes:      []string{"openid"},
+		AuthURL:     "http://localhost:1234/op/authorize",
+		TokenURL:    "http://localhost:1234/op/token",
+	}
+
+	srv := NewServer("1234", NewHandler(rp))
 
 	srv.Run()
 }
@@ -74,66 +81,30 @@ func (srv *Server) Run() {
 
 var _ openapi.ServerInterface = (*Handler)(nil)
 
-type Handler struct{}
+type Handler struct {
+	RP *rp.RP
+}
 
-func NewHandler() http.Handler {
+func NewHandler(
+	rp *rp.RP,
+) http.Handler {
 	router := chi.NewRouter()
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {})
 
-	hdl := openapi.HandlerWithOptions(&Handler{}, openapi.ChiServerOptions{
-		BaseRouter:  router,
-		Middlewares: []openapi.MiddlewareFunc{NewMiddleware().Handle},
-	})
+	hdl := openapi.HandlerWithOptions(
+		&Handler{
+			RP: rp,
+		},
+		openapi.ChiServerOptions{
+			BaseRouter: router,
+			Middlewares: []openapi.MiddlewareFunc{
+				middleware.NewAccessLog().Handle,
+				middleware.NewCORS(),
+			},
+		})
 
 	return hdl
-}
-
-type Middleware struct{}
-
-func NewMiddleware() *Middleware {
-	return &Middleware{}
-}
-
-func (middle *Middleware) Handle(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		now := time.Now()
-
-		rw := newResponseWriter(w)
-
-		next.ServeHTTP(rw, r.WithContext(r.Context()))
-
-		logger, _ := zap.NewProduction()
-
-		logger.Info(
-			"access-log",
-			zap.String("method", r.Method),
-			zap.String("path", r.RequestURI),
-			zap.String("protocol", r.Proto),
-			zap.String("addr", r.RemoteAddr),
-			zap.String("user-agent", r.Header["User-Agent"][0]),
-			zap.String("status-code", strconv.Itoa(rw.StatusCode)),
-			zap.String("elapsed", time.Since(now).String()),
-			zap.Int64("elapsed(ms)", time.Since(now).Milliseconds()),
-		)
-	})
-}
-
-type responseWriter struct {
-	http.ResponseWriter
-	StatusCode int
-}
-
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{
-		ResponseWriter: w,
-		StatusCode:     http.StatusOK,
-	}
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.StatusCode = code
-	rw.ResponseWriter.WriteHeader(code)
 }
 
 func (hdl *Handler) IdpSignUp(
@@ -169,12 +140,13 @@ func (hdl *Handler) OpAuthorize(
 	r *http.Request,
 	params openapi.OpAuthorizeParams,
 ) {
-	op.Auth(w, r)
+	log.Printf("%+v", params)
+	op.Authorize(w, r)
 }
 
 func (hdl *Handler) RpLogin(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	rp.Login(w, r)
+	hdl.RP.Login(w, r)
 }

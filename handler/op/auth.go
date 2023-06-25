@@ -1,9 +1,13 @@
 package op
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
-func Auth(
+func Authorize(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+	log.Printf("%+v", r.URL.Query())
 }

@@ -5,6 +5,8 @@ go 1.20
 require (
 	github.com/deepmap/oapi-codegen v1.13.0
 	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/cors v1.2.1
+	github.com/google/uuid v1.3.0
 	go.uber.org/zap v1.24.0
 )
 
@@ -19,7 +21,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect
