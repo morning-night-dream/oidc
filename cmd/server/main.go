@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/morning-night-dream/oidc/handler/op"
 	"github.com/morning-night-dream/oidc/handler/rp"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -80,10 +82,58 @@ func NewHandler() http.Handler {
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {})
 
 	hdl := openapi.HandlerWithOptions(&Handler{}, openapi.ChiServerOptions{
-		BaseRouter: router,
+		BaseRouter:  router,
+		Middlewares: []openapi.MiddlewareFunc{NewMiddleware().Handle},
 	})
 
 	return hdl
+}
+
+type Middleware struct{}
+
+func NewMiddleware() *Middleware {
+	return &Middleware{}
+}
+
+func (middle *Middleware) Handle(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now()
+
+		rw := newResponseWriter(w)
+
+		next.ServeHTTP(rw, r.WithContext(r.Context()))
+
+		logger, _ := zap.NewProduction()
+
+		logger.Info(
+			"access-log",
+			zap.String("method", r.Method),
+			zap.String("path", r.RequestURI),
+			zap.String("protocol", r.Proto),
+			zap.String("addr", r.RemoteAddr),
+			zap.String("user-agent", r.Header["User-Agent"][0]),
+			zap.String("status-code", strconv.Itoa(rw.StatusCode)),
+			zap.String("elapsed", time.Since(now).String()),
+			zap.Int64("elapsed(ms)", time.Since(now).Milliseconds()),
+		)
+	})
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	StatusCode int
+}
+
+func newResponseWriter(w http.ResponseWriter) *responseWriter {
+	return &responseWriter{
+		ResponseWriter: w,
+		StatusCode:     http.StatusOK,
+	}
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.StatusCode = code
+	rw.ResponseWriter.WriteHeader(code)
 }
 
 func (hdl *Handler) IdpSignUp(
