@@ -154,6 +154,13 @@ func (hdl *Handler) OpLoginView(
 	hdl.OP.LoginView(w, r, params)
 }
 
+func (hdl *Handler) OpLogin(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	hdl.OP.Login(w, r)
+}
+
 func (hdl *Handler) OpToken(
 	w http.ResponseWriter,
 	r *http.Request,

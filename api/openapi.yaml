@@ -161,6 +161,18 @@ paths:
           description: OK
         '500':
           description: Internal Server Error
+  /op/login:
+    post:
+      tags:
+        - OP
+      summary: OP Login
+      description: OP Login
+      operationId: opLogin
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
   /op/token:
     post:
       tags:
@@ -310,6 +322,25 @@ components:
         - token_endpoint
         - userinfo_endpoint
         - revocation_endpoint
+    OPLoginRequestSchema:
+      type: object
+      properties:
+        id:
+          type: string
+          description: id
+          example: id
+        username:
+          type: string
+          description: username
+          example: username
+        password:
+          type: string
+          description: password
+          example: password
+      required:
+        - id
+        - username
+        - password
     OPTokenResponseSchema:
       type: object
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse

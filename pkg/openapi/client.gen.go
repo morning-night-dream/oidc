@@ -105,6 +105,9 @@ type ClientInterface interface {
 	// OpAuthorize request
 	OpAuthorize(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// OpLogin request
+	OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// OpLoginView request
 	OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -180,6 +183,18 @@ func (c *Client) OpOpenIDConfiguration(ctx context.Context, reqEditors ...Reques
 
 func (c *Client) OpAuthorize(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewOpAuthorizeRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpLoginRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -442,6 +457,33 @@ func NewOpAuthorizeRequest(server string, params *OpAuthorizeParams) (*http.Requ
 	return req, nil
 }
 
+// NewOpLoginRequest generates requests for OpLogin
+func NewOpLoginRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/op/login")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewOpLoginViewRequest generates requests for OpLoginView
 func NewOpLoginViewRequest(server string, params *OpLoginViewParams) (*http.Request, error) {
 	var err error
@@ -681,6 +723,9 @@ type ClientWithResponsesInterface interface {
 	// OpAuthorize request
 	OpAuthorizeWithResponse(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*OpAuthorizeResponse, error)
 
+	// OpLogin request
+	OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error)
+
 	// OpLoginView request
 	OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error)
 
@@ -773,6 +818,27 @@ func (r OpAuthorizeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r OpAuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type OpLoginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r OpLoginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpLoginResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -920,6 +986,15 @@ func (c *ClientWithResponses) OpAuthorizeWithResponse(ctx context.Context, param
 	return ParseOpAuthorizeResponse(rsp)
 }
 
+// OpLoginWithResponse request returning *OpLoginResponse
+func (c *ClientWithResponses) OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error) {
+	rsp, err := c.OpLogin(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpLoginResponse(rsp)
+}
+
 // OpLoginViewWithResponse request returning *OpLoginViewResponse
 func (c *ClientWithResponses) OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error) {
 	rsp, err := c.OpLoginView(ctx, params, reqEditors...)
@@ -1023,6 +1098,22 @@ func ParseOpAuthorizeResponse(rsp *http.Response) (*OpAuthorizeResponse, error) 
 	}
 
 	response := &OpAuthorizeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseOpLoginResponse parses an HTTP response from a OpLoginWithResponse call
+func ParseOpLoginResponse(rsp *http.Response) (*OpLoginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpLoginResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

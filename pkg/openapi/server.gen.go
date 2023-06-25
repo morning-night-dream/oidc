@@ -26,6 +26,9 @@ type ServerInterface interface {
 	// (GET /op/authorize)
 	OpAuthorize(w http.ResponseWriter, r *http.Request, params OpAuthorizeParams)
 	// OP Login
+	// (POST /op/login)
+	OpLogin(w http.ResponseWriter, r *http.Request)
+	// OP Login
 	// (GET /op/login/view)
 	OpLoginView(w http.ResponseWriter, r *http.Request, params OpLoginViewParams)
 	// Token Request
@@ -172,6 +175,21 @@ func (siw *ServerInterfaceWrapper) OpAuthorize(w http.ResponseWriter, r *http.Re
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.OpAuthorize(w, r, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// OpLogin operation middleware
+func (siw *ServerInterfaceWrapper) OpLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpLogin(w, r)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -414,6 +432,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/authorize", wrapper.OpAuthorize)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/op/login", wrapper.OpLogin)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/login/view", wrapper.OpLoginView)

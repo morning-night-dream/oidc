@@ -42,7 +42,7 @@ const tmp = `<!DOCTYPE html>
 		<title>Login</title>
 	</head>
 	<body style="display: flex; align-items: center; justify-content: center; height: 100vh;">
-		<form method="POST" action="/login" style="height: 200px; width: 200px;">
+		<form method="POST" action="/op/login" style="height: 200px; width: 200px;">
 
 			<input type="hidden" name="id" value="{{.ID}}">
 
