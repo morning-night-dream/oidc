@@ -105,6 +105,9 @@ type ClientInterface interface {
 	// OpAuthorize request
 	OpAuthorize(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// OpLoginView request
+	OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// OpToken request
 	OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -177,6 +180,18 @@ func (c *Client) OpOpenIDConfiguration(ctx context.Context, reqEditors ...Reques
 
 func (c *Client) OpAuthorize(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewOpAuthorizeRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpLoginViewRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -352,52 +367,52 @@ func NewOpAuthorizeRequest(server string, params *OpAuthorizeParams) (*http.Requ
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.ResponseType != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "response_type", runtime.ParamLocationQuery, *params.ResponseType); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "response_type", runtime.ParamLocationQuery, params.ResponseType); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
-
 		}
 
-		if params.Scope != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scope", runtime.ParamLocationQuery, *params.Scope); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scope", runtime.ParamLocationQuery, params.Scope); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
-
 		}
 
-		if params.ClientId != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "client_id", runtime.ParamLocationQuery, *params.ClientId); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "client_id", runtime.ParamLocationQuery, params.ClientId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
+		}
 
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "redirect_uri", runtime.ParamLocationQuery, params.RedirectUri); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
 		}
 
 		if params.State != nil {
@@ -416,20 +431,49 @@ func NewOpAuthorizeRequest(server string, params *OpAuthorizeParams) (*http.Requ
 
 		}
 
-		if params.RedirectUri != nil {
+		queryURL.RawQuery = queryValues.Encode()
+	}
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "redirect_uri", runtime.ParamLocationQuery, *params.RedirectUri); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewOpLoginViewRequest generates requests for OpLoginView
+func NewOpLoginViewRequest(server string, params *OpLoginViewParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/op/login/view")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "auth_request_id", runtime.ParamLocationQuery, params.AuthRequestId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
 				}
 			}
-
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
@@ -637,6 +681,9 @@ type ClientWithResponsesInterface interface {
 	// OpAuthorize request
 	OpAuthorizeWithResponse(ctx context.Context, params *OpAuthorizeParams, reqEditors ...RequestEditorFn) (*OpAuthorizeResponse, error)
 
+	// OpLoginView request
+	OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error)
+
 	// OpToken request
 	OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
 
@@ -726,6 +773,27 @@ func (r OpAuthorizeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r OpAuthorizeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type OpLoginViewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r OpLoginViewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpLoginViewResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -852,6 +920,15 @@ func (c *ClientWithResponses) OpAuthorizeWithResponse(ctx context.Context, param
 	return ParseOpAuthorizeResponse(rsp)
 }
 
+// OpLoginViewWithResponse request returning *OpLoginViewResponse
+func (c *ClientWithResponses) OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error) {
+	rsp, err := c.OpLoginView(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpLoginViewResponse(rsp)
+}
+
 // OpTokenWithResponse request returning *OpTokenResponse
 func (c *ClientWithResponses) OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error) {
 	rsp, err := c.OpToken(ctx, params, reqEditors...)
@@ -946,6 +1023,22 @@ func ParseOpAuthorizeResponse(rsp *http.Response) (*OpAuthorizeResponse, error) 
 	}
 
 	response := &OpAuthorizeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseOpLoginViewResponse parses an HTTP response from a OpLoginViewWithResponse call
+func ParseOpLoginViewResponse(rsp *http.Response) (*OpLoginViewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpLoginViewResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

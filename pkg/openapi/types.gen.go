@@ -90,19 +90,19 @@ type OPTokenResponseSchema struct {
 // OpAuthorizeParams defines parameters for OpAuthorize.
 type OpAuthorizeParams struct {
 	// ResponseType response_type
-	ResponseType *OpAuthorizeParamsResponseType `form:"response_type,omitempty" json:"response_type,omitempty"`
+	ResponseType OpAuthorizeParamsResponseType `form:"response_type" json:"response_type"`
 
 	// Scope scope
-	Scope *OpAuthorizeParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
+	Scope OpAuthorizeParamsScope `form:"scope" json:"scope"`
 
 	// ClientId client_id
-	ClientId *string `form:"client_id,omitempty" json:"client_id,omitempty"`
+	ClientId string `form:"client_id" json:"client_id"`
+
+	// RedirectUri http://localhost:1234/rp/auth/callback
+	RedirectUri string `form:"redirect_uri" json:"redirect_uri"`
 
 	// State state
 	State *string `form:"state,omitempty" json:"state,omitempty"`
-
-	// RedirectUri http://localhost:1234/rp/auth/callback
-	RedirectUri *string `form:"redirect_uri,omitempty" json:"redirect_uri,omitempty"`
 }
 
 // OpAuthorizeParamsResponseType defines parameters for OpAuthorize.
@@ -110,6 +110,12 @@ type OpAuthorizeParamsResponseType string
 
 // OpAuthorizeParamsScope defines parameters for OpAuthorize.
 type OpAuthorizeParamsScope string
+
+// OpLoginViewParams defines parameters for OpLoginView.
+type OpLoginViewParams struct {
+	// AuthRequestId auth request id
+	AuthRequestId string `form:"auth_request_id" json:"auth_request_id"`
+}
 
 // OpTokenParams defines parameters for OpToken.
 type OpTokenParams struct {

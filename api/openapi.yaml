@@ -82,6 +82,7 @@ paths:
       parameters:
         - name: response_type
           in: query
+          required: true
           description: response_type
           schema:
             type: string
@@ -95,6 +96,7 @@ paths:
               - code id_token token
         - name: scope
           in: query
+          required: true
           description: scope
           schema:
             type: string
@@ -107,24 +109,27 @@ paths:
               - offline_access
         - name: client_id
           in: query
+          required: true
           description: client_id
           schema:
             type: string
             format: uri
             example: client_id
-        - name: state
-          in: query
-          description: state
-          schema:
-            type: string
-            example: state
         - name: redirect_uri
           in: query
+          required: true
           description: http://localhost:1234/rp/auth/callback
           schema:
             type: string
             format: uri
             example: http://localhost:1234/rp/auth/callback
+        - name: state
+          in: query
+          required: false
+          description: state
+          schema:
+            type: string
+            example: state
       responses:
         '302':
           description: Found
@@ -134,6 +139,26 @@ paths:
                 type: string
                 format: uri
                 example: http://localhost:1234/rp/auth/callback
+        '500':
+          description: Internal Server Error
+  /op/login/view:
+    get:
+      tags:
+        - OP
+      summary: OP Login
+      description: OP Login
+      operationId: opLoginView
+      parameters:
+        - name: auth_request_id
+          in: query
+          required: true
+          description: auth request id
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        '200':
+          description: OK
         '500':
           description: Internal Server Error
   /op/token:

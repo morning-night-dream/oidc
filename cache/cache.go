@@ -10,6 +10,12 @@ type Cache[T any] struct {
 	data map[string]T
 }
 
+func New[T any]() *Cache[T] {
+	return &Cache[T]{
+		data: make(map[string]T),
+	}
+}
+
 func (cc *Cache[T]) Get(key string) (T, error) {
 	var val T
 

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/morning-night-dream/oidc/cache"
 	"github.com/morning-night-dream/oidc/handler/idp"
 	"github.com/morning-night-dream/oidc/handler/op"
 	"github.com/morning-night-dream/oidc/handler/rp"
@@ -29,8 +30,9 @@ func main() {
 	}
 
 	op := &op.OP{
-		AllowClientID:    "morning-night-dream",
-		AllowRedirectURI: "http://localhost:1234/rp/callback",
+		AllowClientID:        "morning-night-dream",
+		AllowRedirectURI:     "http://localhost:1234/rp/callback",
+		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),
 	}
 
 	srv := NewServer("1234", NewHandler(rp, op))
@@ -136,20 +138,28 @@ func (hdl *Handler) OpOpenIDConfiguration(
 	hdl.OP.OpenIDConfiguration(w, r)
 }
 
-func (hdl *Handler) OpToken(
-	w http.ResponseWriter,
-	r *http.Request,
-	params openapi.OpTokenParams,
-) {
-	hdl.OP.Token(w, r, params)
-}
-
 func (hdl *Handler) OpAuthorize(
 	w http.ResponseWriter,
 	r *http.Request,
 	params openapi.OpAuthorizeParams,
 ) {
 	hdl.OP.Authorize(w, r, params)
+}
+
+func (hdl *Handler) OpLoginView(
+	w http.ResponseWriter,
+	r *http.Request,
+	params openapi.OpLoginViewParams,
+) {
+	hdl.OP.LoginView(w, r, params)
+}
+
+func (hdl *Handler) OpToken(
+	w http.ResponseWriter,
+	r *http.Request,
+	params openapi.OpTokenParams,
+) {
+	hdl.OP.Token(w, r, params)
 }
 
 func (hdl *Handler) RpLogin(

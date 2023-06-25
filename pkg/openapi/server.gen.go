@@ -25,6 +25,9 @@ type ServerInterface interface {
 	// Authentication Request
 	// (GET /op/authorize)
 	OpAuthorize(w http.ResponseWriter, r *http.Request, params OpAuthorizeParams)
+	// OP Login
+	// (GET /op/login/view)
+	OpLoginView(w http.ResponseWriter, r *http.Request, params OpLoginViewParams)
 	// Token Request
 	// (POST /op/token)
 	OpToken(w http.ResponseWriter, r *http.Request, params OpTokenParams)
@@ -99,27 +102,63 @@ func (siw *ServerInterfaceWrapper) OpAuthorize(w http.ResponseWriter, r *http.Re
 	// Parameter object where we will unmarshal all parameters from the context
 	var params OpAuthorizeParams
 
-	// ------------- Optional query parameter "response_type" -------------
+	// ------------- Required query parameter "response_type" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "response_type", r.URL.Query(), &params.ResponseType)
+	if paramValue := r.URL.Query().Get("response_type"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "response_type"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "response_type", r.URL.Query(), &params.ResponseType)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "response_type", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "scope" -------------
+	// ------------- Required query parameter "scope" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "scope", r.URL.Query(), &params.Scope)
+	if paramValue := r.URL.Query().Get("scope"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "scope"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "scope", r.URL.Query(), &params.Scope)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "client_id" -------------
+	// ------------- Required query parameter "client_id" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "client_id", r.URL.Query(), &params.ClientId)
+	if paramValue := r.URL.Query().Get("client_id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "client_id"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "client_id", r.URL.Query(), &params.ClientId)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "client_id", Err: err})
+		return
+	}
+
+	// ------------- Required query parameter "redirect_uri" -------------
+
+	if paramValue := r.URL.Query().Get("redirect_uri"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "redirect_uri"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "redirect_uri", r.URL.Query(), &params.RedirectUri)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redirect_uri", Err: err})
 		return
 	}
 
@@ -131,16 +170,43 @@ func (siw *ServerInterfaceWrapper) OpAuthorize(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// ------------- Optional query parameter "redirect_uri" -------------
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpAuthorize(w, r, params)
+	})
 
-	err = runtime.BindQueryParameter("form", true, false, "redirect_uri", r.URL.Query(), &params.RedirectUri)
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// OpLoginView operation middleware
+func (siw *ServerInterfaceWrapper) OpLoginView(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params OpLoginViewParams
+
+	// ------------- Required query parameter "auth_request_id" -------------
+
+	if paramValue := r.URL.Query().Get("auth_request_id"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "auth_request_id"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "auth_request_id", r.URL.Query(), &params.AuthRequestId)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redirect_uri", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "auth_request_id", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.OpAuthorize(w, r, params)
+		siw.Handler.OpLoginView(w, r, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -348,6 +414,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/authorize", wrapper.OpAuthorize)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/op/login/view", wrapper.OpLoginView)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/token", wrapper.OpToken)
