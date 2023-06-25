@@ -148,13 +148,13 @@ type OpLoginViewParams struct {
 // OpTokenParams defines parameters for OpToken.
 type OpTokenParams struct {
 	// GrantType grant_type
-	GrantType *OpTokenParamsGrantType `form:"grant_type,omitempty" json:"grant_type,omitempty"`
+	GrantType OpTokenParamsGrantType `form:"grant_type" json:"grant_type"`
 
 	// Code code
-	Code *string `form:"code,omitempty" json:"code,omitempty"`
+	Code string `form:"code" json:"code"`
 
 	// RedirectUri http://localhost:1234/rp/callback
-	RedirectUri *string `form:"redirect_uri,omitempty" json:"redirect_uri,omitempty"`
+	RedirectUri string `form:"redirect_uri" json:"redirect_uri"`
 }
 
 // OpTokenParamsGrantType defines parameters for OpToken.

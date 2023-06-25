@@ -36,7 +36,7 @@ type ServerInterface interface {
 	// (GET /op/login/view)
 	OpLoginView(w http.ResponseWriter, r *http.Request, params OpLoginViewParams)
 	// Token Request
-	// (POST /op/token)
+	// (GET /op/token)
 	OpToken(w http.ResponseWriter, r *http.Request, params OpTokenParams)
 	// UserInfo Request
 	// (GET /op/userinfo)
@@ -285,25 +285,46 @@ func (siw *ServerInterfaceWrapper) OpToken(w http.ResponseWriter, r *http.Reques
 	// Parameter object where we will unmarshal all parameters from the context
 	var params OpTokenParams
 
-	// ------------- Optional query parameter "grant_type" -------------
+	// ------------- Required query parameter "grant_type" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "grant_type", r.URL.Query(), &params.GrantType)
+	if paramValue := r.URL.Query().Get("grant_type"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "grant_type"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "grant_type", r.URL.Query(), &params.GrantType)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "grant_type", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "code" -------------
+	// ------------- Required query parameter "code" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "code", r.URL.Query(), &params.Code)
+	if paramValue := r.URL.Query().Get("code"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "code"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "code", r.URL.Query(), &params.Code)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "code", Err: err})
 		return
 	}
 
-	// ------------- Optional query parameter "redirect_uri" -------------
+	// ------------- Required query parameter "redirect_uri" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "redirect_uri", r.URL.Query(), &params.RedirectUri)
+	if paramValue := r.URL.Query().Get("redirect_uri"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "redirect_uri"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "redirect_uri", r.URL.Query(), &params.RedirectUri)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redirect_uri", Err: err})
 		return
@@ -537,7 +558,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/op/login/view", wrapper.OpLoginView)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/op/token", wrapper.OpToken)
+		r.Get(options.BaseURL+"/op/token", wrapper.OpToken)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/userinfo", wrapper.OpUserinfo)

@@ -200,7 +200,7 @@ paths:
         '500':
           description: Internal Server Error
   /op/token:
-    post:
+    get:
       tags:
         - OP
       summary: Token Request
@@ -209,6 +209,7 @@ paths:
       parameters:
         - name: grant_type
           in: query
+          required: true
           description: grant_type
           schema:
             type: string
@@ -220,11 +221,13 @@ paths:
               - urn:ietf:params:oauth:grant-type:device_code
         - name: code
           in: query
+          required: true
           description: code
           schema:
             type: string
         - name: redirect_uri
           in: query
+          required: true
           description: http://localhost:1234/rp/callback
           schema:
             type: string
