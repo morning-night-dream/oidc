@@ -118,11 +118,11 @@ paths:
         - name: redirect_uri
           in: query
           required: true
-          description: http://localhost:1234/rp/auth/callback
+          description: http://localhost:1234/rp/callback
           schema:
             type: string
             format: uri
-            example: http://localhost:1234/rp/auth/callback
+            example: http://localhost:1234/rp/callback
         - name: state
           in: query
           required: false
@@ -138,7 +138,7 @@ paths:
               schema:
                 type: string
                 format: uri
-                example: http://localhost:1234/rp/auth/callback
+                example: http://localhost:1234/rp/callback
         '500':
           description: Internal Server Error
   /op/login/view:

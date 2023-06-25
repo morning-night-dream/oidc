@@ -120,7 +120,7 @@ type OpAuthorizeParams struct {
 	// ClientId client_id
 	ClientId string `form:"client_id" json:"client_id"`
 
-	// RedirectUri http://localhost:1234/rp/auth/callback
+	// RedirectUri http://localhost:1234/rp/callback
 	RedirectUri string `form:"redirect_uri" json:"redirect_uri"`
 
 	// State state
