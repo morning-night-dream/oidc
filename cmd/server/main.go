@@ -92,6 +92,8 @@ func NewHandler(
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {})
 
+	router.Get("/op/login", op.LoginView)
+
 	hdl := openapi.HandlerWithOptions(
 		&Handler{
 			RP: rp,
