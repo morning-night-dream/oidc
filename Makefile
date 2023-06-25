@@ -16,6 +16,14 @@ gen: ## Generate code.
 	@oapi-codegen -generate client -package openapi ./api/openapi.yaml > ./pkg/openapi/client.gen.go
 	@go mod tidy
 
-.PHONY: server
-server: ## Run server.
-	@go run ./server/main.go
+.PHONY: up
+up: ## Make development. (build and run containers.)
+	@docker compose --project-name ${APP_NAME} --file ./.docker/compose.yaml up -d
+
+.PHONY: down
+down: ## Down development. (retain containers and delete volumes.)
+	@docker compose --project-name ${APP_NAME} down --volumes
+
+.PHONY: clean
+clean: ## Destroy everything about docker. (containers, images, volumes, networks.)
+	@docker compose --project-name ${APP_NAME} down --rmi all --volumes
