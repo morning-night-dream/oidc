@@ -21,6 +21,12 @@ import (
 )
 
 func main() {
+	upc := cache.New[openapi.UsernamePassword]()
+
+	idp := &idp.IdP{
+		UsernamePasswordCache: upc,
+	}
+
 	rp := &rp.RP{
 		ClientID:    "morning-night-dream",
 		RedirectURI: "http://localhost:1234/rp/callback",
@@ -31,12 +37,13 @@ func main() {
 	}
 
 	op := &op.OP{
-		AllowClientID:        "morning-night-dream",
-		AllowRedirectURI:     "http://localhost:1234/rp/callback",
-		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),
+		AllowClientID:         "morning-night-dream",
+		AllowRedirectURI:      "http://localhost:1234/rp/callback",
+		AuthorizeParamsCache:  cache.New[openapi.OpAuthorizeParams](),
+		UsernamePasswordCache: upc,
 	}
 
-	srv := NewServer("1234", NewHandler(rp, op))
+	srv := NewServer("1234", NewHandler(idp, rp, op))
 
 	srv.Run()
 }
@@ -90,11 +97,13 @@ func (srv *Server) Run() {
 var _ openapi.ServerInterface = (*Handler)(nil)
 
 type Handler struct {
-	RP *rp.RP
-	OP *op.OP
+	IdP *idp.IdP
+	RP  *rp.RP
+	OP  *op.OP
 }
 
 func NewHandler(
+	idp *idp.IdP,
 	rp *rp.RP,
 	op *op.OP,
 ) http.Handler {
@@ -104,8 +113,9 @@ func NewHandler(
 
 	hdl := openapi.HandlerWithOptions(
 		&Handler{
-			RP: rp,
-			OP: op,
+			IdP: idp,
+			RP:  rp,
+			OP:  op,
 		},
 		openapi.ChiServerOptions{
 			BaseRouter: router,
@@ -122,14 +132,14 @@ func (hdl *Handler) IdpSignup(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	idp.Signup(w, r)
+	hdl.IdP.Signup(w, r)
 }
 
 func (hdl *Handler) IdpSignin(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	idp.Signin(w, r)
+	hdl.IdP.Signin(w, r)
 }
 
 func (hdl *Handler) OpOpenIDConfiguration(

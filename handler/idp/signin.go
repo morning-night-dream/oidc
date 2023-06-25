@@ -2,7 +2,7 @@ package idp
 
 import "net/http"
 
-func Signin(
+func (idp *IdP) Signin(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {

@@ -6,5 +6,5 @@ import (
 )
 
 type IdP struct {
-	UsaenamePasswordCache *cache.Cache[openapi.UsernamePassword]
+	UsernamePasswordCache *cache.Cache[openapi.UsernamePassword]
 }

@@ -2,7 +2,7 @@ package idp
 
 import "net/http"
 
-func Signup(
+func (idp *IdP) Signup(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
