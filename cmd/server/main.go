@@ -24,6 +24,7 @@ import (
 func main() {
 	user := cache.New[model.User]()
 
+	// NOTE: テストユーザーを登録
 	user.Set("username", model.User{
 		ID:       "id",
 		Username: "username",
