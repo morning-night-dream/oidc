@@ -42,7 +42,11 @@ func (op *OP) Login(
 	}
 
 	// user がログインに成功していることをキャッシュに保存しておく
-	op.LoggedInUserCache.Set(id, user)
+	if err := op.LoggedInUserCache.Set(id, user); err != nil {
+		http.Error(w, fmt.Sprintf("cannot set cache:%s", err), http.StatusInternalServerError)
+
+		return
+	}
 
 	var buf bytes.Buffer
 

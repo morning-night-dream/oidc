@@ -43,17 +43,17 @@ const tmp = `<!DOCTYPE html>
 		<meta charset="UTF-8">
 		<title>Login</title>
 	</head>
-	<body style="display: flex; align-items: center; justify-content: center; height: 100vh;">
+	<body bgcolor="black" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
 		<form method="POST" action="/op/login" style="height: 200px; width: 200px;">
 
 			<input type="hidden" name="id" value="{{.ID}}">
 
-			<div>
+			<div style="color:white;">
 				<label for="username">Username:</label>
 				<input id="username" name="username" style="width: 100%">
 			</div>
 
-			<div>
+			<div style="color:white;">
 				<label for="password">Password:</label>
 				<input id="password" name="password" style="width: 100%">
 			</div>

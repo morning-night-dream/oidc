@@ -36,6 +36,12 @@ func main() {
 		Password: password,
 	})
 
+	accessToken := cache.New[model.AccessToken]()
+
+	refreshToken := cache.New[model.RefreshToken]()
+
+	idToken := cache.New[model.IDToken]()
+
 	idp := &idp.IdP{
 		UserCache: user,
 	}
@@ -55,6 +61,9 @@ func main() {
 		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),
 		UserCache:            user,
 		LoggedInUserCache:    cache.New[model.User](),
+		AccessTokenCache:     accessToken,
+		RefreshTokenCache:    refreshToken,
+		IDTokenCache:         idToken,
 	}
 
 	srv := NewServer("1234", NewHandler(idp, rp, op))

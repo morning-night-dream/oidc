@@ -16,27 +16,52 @@ func (op *OP) Token(
 ) {
 	log.Printf("%+v", params)
 
+	user, err := op.LoggedInUserCache.Get(params.Code)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+
+		return
+	}
+
 	// ref. https://qiita.com/TakahikoKawasaki/items/970548727761f9e02bcd
 	// 1.3 hybrid type で実装してみる
 	// -> アクセストークンを revoke したいため
 	at := model.GenerateAccessToken(
 		"iss",
-		"sub",
+		user.ID,
 		"aud",
 		"jti",
 		"scope",
 		"client_id",
 	)
 
+	if err := op.AccessTokenCache.Set(user.ID, at); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+
+		return
+	}
+
 	rt := model.GenerateRefreshToken()
+
+	if err := op.RefreshTokenCache.Set(user.ID, rt); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+
+		return
+	}
 
 	it := model.GenerateIDToken(
 		"iss",
-		"sub",
+		user.ID,
 		"aud",
 		"nonce",
-		"name",
+		user.Username,
 	)
+
+	if err := op.IDTokenCache.Set(user.ID, it); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+
+		return
+	}
 
 	res := openapi.OPTokenResponseSchema{
 		TokenType:    "Bearer",

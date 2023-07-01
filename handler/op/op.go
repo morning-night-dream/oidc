@@ -12,4 +12,7 @@ type OP struct {
 	AuthorizeParamsCache *cache.Cache[openapi.OpAuthorizeParams]
 	UserCache            *cache.Cache[model.User]
 	LoggedInUserCache    *cache.Cache[model.User]
+	AccessTokenCache     *cache.Cache[model.AccessToken]
+	RefreshTokenCache    *cache.Cache[model.RefreshToken]
+	IDTokenCache         *cache.Cache[model.IDToken]
 }
