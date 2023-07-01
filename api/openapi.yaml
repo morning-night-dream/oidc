@@ -408,6 +408,12 @@ components:
           type: string
           description: id_token
           example: id_token
+      required:
+        - access_token
+        - token_type
+        - refresh_token
+        - expires_in
+        - id_token
     OPUserInfoResponseSchema:
       type: object
       description: https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
@@ -420,63 +426,6 @@ components:
           type: string
           description: name
           example: name
-        given_name:
-          type: string
-          description: given_name
-          example: given_name
-        family_name:
-          type: string
-          description: family_name
-          example: family_name
-        preferred_username:
-          type: string
-          description: preferred_username
-          example: preferred_username
       required:
         - sub
         - name
-        - given_name
-        - family_name
-        - preferred_username
-    IDTokenSchema:
-      type: object
-      description: |
-        https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#IDToken
-        https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
-      properties:
-        iss:
-          type: string
-          description: issuer
-          example: iss
-        sub:
-          type: string
-          description: subject
-          example: sub
-        aud:
-          type: string
-          description: audience
-          example: aud
-        exp:
-          type: integer
-          description: expires_at
-          example: 1687360973
-        iat:
-          type: integer
-          description: issued_at
-          example: 1687360973
-        auth_time:
-          type: integer
-          description: auth_time
-          example: 1687360973
-        nonce:
-          type: string
-          description: nonce
-          example: nonce
-      required:
-        - iss
-        - sub
-        - aud
-        - exp
-        - iat
-        - auth_time
-        - nonce

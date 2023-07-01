@@ -76,34 +76,25 @@ type OPOpenIDConfigurationResponseSchema struct {
 // OPTokenResponseSchema https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse
 type OPTokenResponseSchema struct {
 	// AccessToken access_token
-	AccessToken *string `json:"access_token,omitempty"`
+	AccessToken string `json:"access_token"`
 
 	// ExpiresIn expires_in
-	ExpiresIn *int `json:"expires_in,omitempty"`
+	ExpiresIn int `json:"expires_in"`
 
 	// IdToken id_token
-	IdToken *string `json:"id_token,omitempty"`
+	IdToken string `json:"id_token"`
 
 	// RefreshToken refresh_token
-	RefreshToken *string `json:"refresh_token,omitempty"`
+	RefreshToken string `json:"refresh_token"`
 
 	// TokenType token_type
-	TokenType *string `json:"token_type,omitempty"`
+	TokenType string `json:"token_type"`
 }
 
 // OPUserInfoResponseSchema https://openid.net/specs/openid-connect-core-1_0.html#UserInfoResponse
 type OPUserInfoResponseSchema struct {
-	// FamilyName family_name
-	FamilyName string `json:"family_name"`
-
-	// GivenName given_name
-	GivenName string `json:"given_name"`
-
 	// Name name
 	Name string `json:"name"`
-
-	// PreferredUsername preferred_username
-	PreferredUsername string `json:"preferred_username"`
 
 	// Sub sub
 	Sub string `json:"sub"`

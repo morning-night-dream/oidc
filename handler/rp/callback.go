@@ -2,7 +2,10 @@ package rp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -39,14 +42,16 @@ func (rp *RP) Callback(
 
 	defer tRes.Body.Close()
 
-	// tBody, _ := io.ReadAll(tRes.Body)
+	tBody, _ := io.ReadAll(tRes.Body)
 
-	// var token openapi.OpTokenResponse
-	// if err := json.Unmarshal(tBody, &token); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	var token openapi.OPTokenResponseSchema
+	if err := json.Unmarshal(tBody, &token); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 
-	// 	return
-	// }
+		return
+	}
+
+	log.Printf("%+v", token)
 
 	// userinfo取得
 	uRes, err := http.Get(rp.UserInfoURL)

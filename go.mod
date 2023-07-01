@@ -6,6 +6,7 @@ require (
 	github.com/deepmap/oapi-codegen v1.13.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.3.0
 	go.uber.org/zap v1.24.0
 )
