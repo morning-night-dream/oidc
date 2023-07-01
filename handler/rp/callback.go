@@ -54,23 +54,40 @@ func (rp *RP) Callback(
 	log.Printf("%+v", token)
 
 	// userinfo取得
-	uRes, err := http.Get(rp.UserInfoURL)
+	client := &http.Client{
+		Transport: NewAuthorizationTransport(token.AccessToken),
+	}
+
+	req, err := http.NewRequest(http.MethodGet, rp.UserInfoURL, nil)
 	if err != nil {
+		log.Printf("failed to create request: %v", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
 
-	defer uRes.Body.Close()
+	res, err := client.Do(req)
+	if err != nil {
+		log.Printf("failed to request: %v", err)
 
-	// uBody, _ := io.ReadAll(uRes.Body)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 
-	// var userinfo openapi.OpUserinfoResponse
-	// if err := json.Unmarshal(uBody, &userinfo); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// 	return
-	// }
+	defer res.Body.Close()
 
-	w.Write([]byte(fmt.Sprintf("%+v", "userinfo")))
+	body, _ := io.ReadAll(res.Body)
+
+	var userinfo openapi.OPUserInfoResponseSchema
+	if err := json.Unmarshal(body, &userinfo); err != nil {
+		log.Printf("failed to unmarshal: %v", err)
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf("%+v", userinfo)))
 }
