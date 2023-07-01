@@ -119,6 +119,13 @@ func NewHandler(
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {})
 
+	// NOTE: 動作確認しやすくするための実装
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		url := "http://localhost:1234/rp/login"
+
+		http.Redirect(w, r, url, http.StatusFound)
+	})
+
 	hdl := openapi.HandlerWithOptions(
 		&Handler{
 			IdP: idp,
