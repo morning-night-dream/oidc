@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/morning-night-dream/oidc/pkg/log"
 	"go.uber.org/zap"
 )
 
@@ -22,9 +23,7 @@ func (middle *AccessLog) Handle(next http.Handler) http.Handler {
 
 		next.ServeHTTP(rw, r.WithContext(r.Context()))
 
-		logger, _ := zap.NewProduction()
-
-		logger.Debug(
+		log.Log().Debug(
 			"access-log",
 			zap.String("method", r.Method),
 			zap.String("path", r.RequestURI),

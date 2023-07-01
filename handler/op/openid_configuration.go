@@ -2,9 +2,10 @@ package op
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 
+	"github.com/morning-night-dream/oidc/pkg/log"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
@@ -21,7 +22,7 @@ func (op *OP) OpenIDConfiguration(
 	}
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Printf("failed to encode response: %v", err)
+		log.Log().Warn(fmt.Sprintf("failed to encode response: %v", err))
 
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}

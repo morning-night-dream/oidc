@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
+	"github.com/morning-night-dream/oidc/pkg/log"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
@@ -51,7 +51,7 @@ func (rp *RP) Callback(
 		return
 	}
 
-	log.Printf("%+v", token)
+	log.Log().Debug(fmt.Sprintf("%+v", token))
 
 	// userinfo取得
 	client := &http.Client{
@@ -60,7 +60,7 @@ func (rp *RP) Callback(
 
 	req, err := http.NewRequest(http.MethodGet, rp.UserInfoURL, nil)
 	if err != nil {
-		log.Printf("failed to create request: %v", err)
+		log.Log().Warn(fmt.Sprintf("failed to create request: %v", err))
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -69,7 +69,7 @@ func (rp *RP) Callback(
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Printf("failed to request: %v", err)
+		log.Log().Warn(fmt.Sprintf("failed to request: %v", err))
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -82,7 +82,7 @@ func (rp *RP) Callback(
 
 	var userinfo openapi.OPUserInfoResponseSchema
 	if err := json.Unmarshal(body, &userinfo); err != nil {
-		log.Printf("failed to unmarshal: %v", err)
+		log.Log().Warn(fmt.Sprintf("failed to unmarshal: %v", err))
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
