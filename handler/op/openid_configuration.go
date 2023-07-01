@@ -23,6 +23,6 @@ func (op *OP) OpenIDConfiguration(
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf("failed to encode response: %v", err)
 
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}
 }

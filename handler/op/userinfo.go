@@ -19,7 +19,7 @@ func (op *OP) Userinfo(
 	if authorization == "" {
 		log.Printf("authorization header is empty")
 
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
 		return
 	}
@@ -29,7 +29,7 @@ func (op *OP) Userinfo(
 	if len(str) != 2 {
 		log.Printf("authorization header is invalid: %s", authorization)
 
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
 		return
 	}
@@ -37,7 +37,7 @@ func (op *OP) Userinfo(
 	if str[0] != "Bearer" {
 		log.Printf("authorization header is invalid: %s", authorization)
 
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
 		return
 	}
@@ -45,7 +45,7 @@ func (op *OP) Userinfo(
 	if _, err := model.ParseAccessToken(str[1], "sign"); err != nil {
 		log.Printf("failed to parse access token: %v", err)
 
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
 		return
 	}
@@ -58,6 +58,6 @@ func (op *OP) Userinfo(
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf("failed to encode response: %v", err)
 
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}
 }
