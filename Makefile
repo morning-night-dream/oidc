@@ -28,6 +28,10 @@ reup:
 logs:
 	@docker logs oidc --follow
 
+.PHONY: redis
+redis:
+	@docker exec -it oidc-redis redis-cli
+
 .PHONY: down
 down: ## Down development. (retain containers and delete volumes.)
 	@docker compose --project-name ${APP_NAME} down --volumes

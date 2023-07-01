@@ -24,11 +24,16 @@ import (
 func main() {
 	user := cache.New[model.User]()
 
+	password, err := model.PasswordEncrypt("password")
+	if err != nil {
+		panic(err)
+	}
+
 	// NOTE: テストユーザーを登録
 	user.Set("username", model.User{
 		ID:       "id",
 		Username: "username",
-		Password: "password",
+		Password: password,
 	})
 
 	idp := &idp.IdP{

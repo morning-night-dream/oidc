@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/morning-night-dream/oidc/model"
 )
 
 func (op *OP) Login(
@@ -33,7 +35,7 @@ func (op *OP) Login(
 		return
 	}
 
-	if user.Password != password {
+	if err := model.CompareHashAndPassword(user.Password, password); err != nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
 		return
