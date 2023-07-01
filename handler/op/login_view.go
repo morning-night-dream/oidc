@@ -56,7 +56,7 @@ const tmp = `<!DOCTYPE html>
 
 			<div style="color:white;">
 				<label for="password">Password:</label>
-				<input id="password" name="password" style="width: 100%">
+				<input id="password" name="password" style="width: 100%" type="password">
 			</div>
 
 			<p style="color:red; min-height: 1rem;">{{.Error}}</p>
