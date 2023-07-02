@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"log"
@@ -42,6 +44,8 @@ func main() {
 
 	idToken := cache.New[model.IDToken]()
 
+	privateKey, _ := rsa.GenerateKey(rand.Reader, 4096)
+
 	idp := &idp.IdP{
 		UserCache: user,
 	}
@@ -64,6 +68,8 @@ func main() {
 		AccessTokenCache:     accessToken,
 		RefreshTokenCache:    refreshToken,
 		IDTokenCache:         idToken,
+		PrivateKey:           privateKey,
+		Issuer:               "http://localhost:1234",
 	}
 
 	srv := NewServer("1234", NewHandler(idp, rp, op))
@@ -220,9 +226,8 @@ func (hdl *Handler) OpUserinfo(
 func (hdl *Handler) OpToken(
 	w http.ResponseWriter,
 	r *http.Request,
-	params openapi.OpTokenParams,
 ) {
-	hdl.OP.Token(w, r, params)
+	hdl.OP.Token(w, r)
 }
 
 func (hdl *Handler) RpLogin(

@@ -1,6 +1,8 @@
 package op
 
 import (
+	"crypto/rsa"
+
 	"github.com/morning-night-dream/oidc/cache"
 	"github.com/morning-night-dream/oidc/model"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
@@ -15,4 +17,6 @@ type OP struct {
 	AccessTokenCache     *cache.Cache[model.AccessToken]
 	RefreshTokenCache    *cache.Cache[model.RefreshToken]
 	IDTokenCache         *cache.Cache[model.IDToken]
+	PrivateKey           *rsa.PrivateKey
+	Issuer               string
 }

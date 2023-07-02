@@ -200,38 +200,19 @@ paths:
         '500':
           description: Internal Server Error
   /op/token:
-    get:
+    post:
       tags:
         - OP
       summary: Token Request
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
       operationId: opToken
-      parameters:
-        - name: grant_type
-          in: query
-          required: true
-          description: grant_type
-          schema:
-            type: string
-            enum:
-              - authorization_code
-              - refresh_token
-              - client_credentials
-              - password
-              - urn:ietf:params:oauth:grant-type:device_code
-        - name: code
-          in: query
-          required: true
-          description: code
-          schema:
-            type: string
-        - name: redirect_uri
-          in: query
-          required: true
-          description: http://localhost:1234/rp/callback
-          schema:
-            type: string
-            format: uri
+      requestBody:
+        description: opToken request body 
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OPTokenRequestSchema'
       responses:
         '200':
           description: OK
@@ -384,6 +365,32 @@ components:
         - token_endpoint
         - userinfo_endpoint
         - revocation_endpoint
+    OPTokenRequestSchema:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+            - refresh_token
+            - client_credentials
+            - password
+            - urn:ietf:params:oauth:grant-type:device_code
+          description: grant_type
+          example: authorization_code
+        code:
+          type: string
+          description: code
+          example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        redirect_uri:
+          type: string
+          description: http://localhost:1234/rp/callback
+          format: uri
+          example: http://localhost:1234/rp/callback
+      required:
+        - grant_type
+        - code
+        - redirect_uri
     OPTokenResponseSchema:
       type: object
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse

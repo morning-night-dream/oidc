@@ -1,6 +1,7 @@
 package model
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"time"
 
@@ -41,7 +42,7 @@ func GenerateIDToken(
 }
 
 func (it IDToken) JWT(
-	sign string,
+	sign *rsa.PrivateKey,
 ) string {
 	claims := jwt.MapClaims{
 		"iss":   it.Iss,
@@ -53,9 +54,9 @@ func (it IDToken) JWT(
 		"name":  it.Name,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
-	str, _ := token.SignedString([]byte(sign))
+	str, _ := token.SignedString(sign)
 
 	return str
 }

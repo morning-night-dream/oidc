@@ -2,6 +2,7 @@ package op
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,11 +13,16 @@ import (
 func (op *OP) Token(
 	w http.ResponseWriter,
 	r *http.Request,
-	params openapi.OpTokenParams,
 ) {
-	log.Printf("%+v", params)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, fmt.Sprintf("cannot parse form:%s", err), http.StatusInternalServerError)
 
-	user, err := op.LoggedInUserCache.Get(params.Code)
+		return
+	}
+
+	code := r.FormValue("code")
+
+	user, err := op.LoggedInUserCache.Get(code)
 	if err != nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 
@@ -27,9 +33,9 @@ func (op *OP) Token(
 	// 1.3 hybrid type で実装してみる
 	// -> アクセストークンを revoke したいため
 	at := model.GenerateAccessToken(
-		"iss",
+		op.Issuer,
 		user.ID,
-		"aud",
+		op.AllowClientID,
 		"jti",
 		"scope",
 		"client_id",
@@ -50,9 +56,9 @@ func (op *OP) Token(
 	}
 
 	it := model.GenerateIDToken(
-		"iss",
+		op.Issuer,
 		user.ID,
-		"aud",
+		op.AllowClientID,
 		"nonce",
 		user.Username,
 	)
@@ -66,7 +72,7 @@ func (op *OP) Token(
 	res := openapi.OPTokenResponseSchema{
 		TokenType:    "Bearer",
 		AccessToken:  at.JWT("sign"),
-		IdToken:      it.JWT("sign"),
+		IdToken:      it.JWT(op.PrivateKey),
 		RefreshToken: rt.Base64(),
 		ExpiresIn:    3600,
 	}
