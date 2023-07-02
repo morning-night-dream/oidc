@@ -72,7 +72,7 @@ func (op *OP) Token(
 	res := openapi.OPTokenResponseSchema{
 		TokenType:    "Bearer",
 		AccessToken:  at.JWT("sign"),
-		IdToken:      it.JWT(op.PrivateKey),
+		IdToken:      it.JWT("sign"),
 		RefreshToken: rt.Base64(),
 		ExpiresIn:    3600,
 	}

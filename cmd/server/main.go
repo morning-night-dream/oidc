@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"log"
@@ -44,8 +42,6 @@ func main() {
 
 	idToken := cache.New[model.IDToken]()
 
-	privateKey, _ := rsa.GenerateKey(rand.Reader, 4096)
-
 	idp := &idp.IdP{
 		UserCache: user,
 	}
@@ -68,7 +64,6 @@ func main() {
 		AccessTokenCache:     accessToken,
 		RefreshTokenCache:    refreshToken,
 		IDTokenCache:         idToken,
-		PrivateKey:           privateKey,
 		Issuer:               "http://localhost:1234",
 	}
 
