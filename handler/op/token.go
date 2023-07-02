@@ -29,6 +29,11 @@ func (op *OP) Token(
 		return
 	}
 
+	authReq, err := op.AuthorizeParamsCache.Get(code)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}
+
 	// ref. https://qiita.com/TakahikoKawasaki/items/970548727761f9e02bcd
 	// 1.3 hybrid type で実装してみる
 	// -> アクセストークンを revoke したいため
@@ -59,7 +64,7 @@ func (op *OP) Token(
 		op.Issuer,
 		user.ID,
 		op.AllowClientID,
-		"nonce",
+		*authReq.Nonce,
 		user.Username,
 	)
 

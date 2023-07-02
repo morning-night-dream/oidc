@@ -130,6 +130,13 @@ paths:
           schema:
             type: string
             example: state
+        - name: nonce
+          in: query
+          required: false
+          description: nonce
+          schema:
+            type: string
+            example: nonce
       responses:
         '302':
           description: Found

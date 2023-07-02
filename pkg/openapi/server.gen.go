@@ -180,6 +180,14 @@ func (siw *ServerInterfaceWrapper) OpAuthorize(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// ------------- Optional query parameter "nonce" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "nonce", r.URL.Query(), &params.Nonce)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "nonce", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.OpAuthorize(w, r, params)
 	})

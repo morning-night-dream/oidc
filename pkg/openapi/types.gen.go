@@ -131,6 +131,9 @@ type OpAuthorizeParams struct {
 
 	// State state
 	State *string `form:"state,omitempty" json:"state,omitempty"`
+
+	// Nonce nonce
+	Nonce *string `form:"nonce,omitempty" json:"nonce,omitempty"`
 }
 
 // OpAuthorizeParamsResponseType defines parameters for OpAuthorize.
