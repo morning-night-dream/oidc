@@ -114,8 +114,10 @@ type ClientInterface interface {
 	// OpLoginView request
 	OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// OpToken request
-	OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// OpToken request with any body
+	OpTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	OpTokenWithFormdataBody(ctx context.Context, body OpTokenFormdataRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// OpUserinfo request
 	OpUserinfo(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -235,8 +237,20 @@ func (c *Client) OpLoginView(ctx context.Context, params *OpLoginViewParams, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) OpToken(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewOpTokenRequest(c.Server, params)
+func (c *Client) OpTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) OpTokenWithFormdataBody(ctx context.Context, body OpTokenFormdataRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpTokenRequestWithFormdataBody(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -476,6 +490,22 @@ func NewOpAuthorizeRequest(server string, params *OpAuthorizeParams) (*http.Requ
 
 		}
 
+		if params.Nonce != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "nonce", runtime.ParamLocationQuery, *params.Nonce); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -604,8 +634,19 @@ func NewOpLoginViewRequest(server string, params *OpLoginViewParams) (*http.Requ
 	return req, nil
 }
 
-// NewOpTokenRequest generates requests for OpToken
-func NewOpTokenRequest(server string, params *OpTokenParams) (*http.Request, error) {
+// NewOpTokenRequestWithFormdataBody calls the generic OpToken builder with application/x-www-form-urlencoded body
+func NewOpTokenRequestWithFormdataBody(server string, body OpTokenFormdataRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	bodyStr, err := runtime.MarshalForm(body, nil)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = strings.NewReader(bodyStr.Encode())
+	return NewOpTokenRequestWithBody(server, "application/x-www-form-urlencoded", bodyReader)
+}
+
+// NewOpTokenRequestWithBody generates requests for OpToken with any type of body
+func NewOpTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -623,52 +664,12 @@ func NewOpTokenRequest(server string, params *OpTokenParams) (*http.Request, err
 		return nil, err
 	}
 
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "grant_type", runtime.ParamLocationQuery, params.GrantType); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "code", runtime.ParamLocationQuery, params.Code); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "redirect_uri", runtime.ParamLocationQuery, params.RedirectUri); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -852,8 +853,10 @@ type ClientWithResponsesInterface interface {
 	// OpLoginView request
 	OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error)
 
-	// OpToken request
-	OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
+	// OpToken request with any body
+	OpTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
+
+	OpTokenWithFormdataBodyWithResponse(ctx context.Context, body OpTokenFormdataRequestBody, reqEditors ...RequestEditorFn) (*OpTokenResponse, error)
 
 	// OpUserinfo request
 	OpUserinfoWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpUserinfoResponse, error)
@@ -1182,9 +1185,17 @@ func (c *ClientWithResponses) OpLoginViewWithResponse(ctx context.Context, param
 	return ParseOpLoginViewResponse(rsp)
 }
 
-// OpTokenWithResponse request returning *OpTokenResponse
-func (c *ClientWithResponses) OpTokenWithResponse(ctx context.Context, params *OpTokenParams, reqEditors ...RequestEditorFn) (*OpTokenResponse, error) {
-	rsp, err := c.OpToken(ctx, params, reqEditors...)
+// OpTokenWithBodyWithResponse request with arbitrary body returning *OpTokenResponse
+func (c *ClientWithResponses) OpTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpTokenResponse, error) {
+	rsp, err := c.OpTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpTokenResponse(rsp)
+}
+
+func (c *ClientWithResponses) OpTokenWithFormdataBodyWithResponse(ctx context.Context, body OpTokenFormdataRequestBody, reqEditors ...RequestEditorFn) (*OpTokenResponse, error) {
+	rsp, err := c.OpTokenWithFormdataBody(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

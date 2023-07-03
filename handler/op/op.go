@@ -15,4 +15,5 @@ type OP struct {
 	AccessTokenCache     *cache.Cache[model.AccessToken]
 	RefreshTokenCache    *cache.Cache[model.RefreshToken]
 	IDTokenCache         *cache.Cache[model.IDToken]
+	Issuer               string
 }

@@ -7,6 +7,15 @@ const (
 	BearerScopes = "Bearer.Scopes"
 )
 
+// Defines values for OPTokenRequestSchemaGrantType.
+const (
+	AuthorizationCode                     OPTokenRequestSchemaGrantType = "authorization_code"
+	ClientCredentials                     OPTokenRequestSchemaGrantType = "client_credentials"
+	Password                              OPTokenRequestSchemaGrantType = "password"
+	RefreshToken                          OPTokenRequestSchemaGrantType = "refresh_token"
+	UrnIetfParamsOauthGrantTypeDeviceCode OPTokenRequestSchemaGrantType = "urn:ietf:params:oauth:grant-type:device_code"
+)
+
 // Defines values for OpAuthorizeParamsResponseType.
 const (
 	Code             OpAuthorizeParamsResponseType = "code"
@@ -26,15 +35,6 @@ const (
 	Openid        OpAuthorizeParamsScope = "openid"
 	Phone         OpAuthorizeParamsScope = "phone"
 	Profile       OpAuthorizeParamsScope = "profile"
-)
-
-// Defines values for OpTokenParamsGrantType.
-const (
-	AuthorizationCode                     OpTokenParamsGrantType = "authorization_code"
-	ClientCredentials                     OpTokenParamsGrantType = "client_credentials"
-	Password                              OpTokenParamsGrantType = "password"
-	RefreshToken                          OpTokenParamsGrantType = "refresh_token"
-	UrnIetfParamsOauthGrantTypeDeviceCode OpTokenParamsGrantType = "urn:ietf:params:oauth:grant-type:device_code"
 )
 
 // IdPSigninRequestSchema defines model for IdPSigninRequestSchema.
@@ -72,6 +72,21 @@ type OPOpenIDConfigurationResponseSchema struct {
 	// UserinfoEndpoint http://localhost:1234/op/userinfo
 	UserinfoEndpoint string `json:"userinfo_endpoint"`
 }
+
+// OPTokenRequestSchema defines model for OPTokenRequestSchema.
+type OPTokenRequestSchema struct {
+	// Code code
+	Code string `json:"code"`
+
+	// GrantType grant_type
+	GrantType OPTokenRequestSchemaGrantType `json:"grant_type"`
+
+	// RedirectUri http://localhost:1234/rp/callback
+	RedirectUri string `json:"redirect_uri"`
+}
+
+// OPTokenRequestSchemaGrantType grant_type
+type OPTokenRequestSchemaGrantType string
 
 // OPTokenResponseSchema https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenResponse
 type OPTokenResponseSchema struct {
@@ -116,6 +131,9 @@ type OpAuthorizeParams struct {
 
 	// State state
 	State *string `form:"state,omitempty" json:"state,omitempty"`
+
+	// Nonce nonce
+	Nonce *string `form:"nonce,omitempty" json:"nonce,omitempty"`
 }
 
 // OpAuthorizeParamsResponseType defines parameters for OpAuthorize.
@@ -136,21 +154,6 @@ type OpLoginViewParams struct {
 	AuthRequestId string `form:"auth_request_id" json:"auth_request_id"`
 }
 
-// OpTokenParams defines parameters for OpToken.
-type OpTokenParams struct {
-	// GrantType grant_type
-	GrantType OpTokenParamsGrantType `form:"grant_type" json:"grant_type"`
-
-	// Code code
-	Code string `form:"code" json:"code"`
-
-	// RedirectUri http://localhost:1234/rp/callback
-	RedirectUri string `form:"redirect_uri" json:"redirect_uri"`
-}
-
-// OpTokenParamsGrantType defines parameters for OpToken.
-type OpTokenParamsGrantType string
-
 // RpCallbackParams defines parameters for RpCallback.
 type RpCallbackParams struct {
 	// Code code
@@ -165,3 +168,6 @@ type IdpSigninJSONRequestBody = IdPSigninRequestSchema
 
 // IdpSignupJSONRequestBody defines body for IdpSignup for application/json ContentType.
 type IdpSignupJSONRequestBody = IdPSignupRequestSchema
+
+// OpTokenFormdataRequestBody defines body for OpToken for application/x-www-form-urlencoded ContentType.
+type OpTokenFormdataRequestBody = OPTokenRequestSchema
