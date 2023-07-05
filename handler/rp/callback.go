@@ -1,12 +1,12 @@
 package rp
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/morning-night-dream/oidc/pkg/log"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
@@ -17,24 +17,16 @@ func (rp *RP) Callback(
 	r *http.Request,
 	params openapi.RpCallbackParams,
 ) {
-	var buf bytes.Buffer
-
-	buf.WriteString(rp.TokenURL)
-
 	values := url.Values{
 		"grant_type":   {"authorization_code"},
 		"code":         {params.Code},
 		"redirect_uri": {rp.RedirectURI},
 	}
 
-	buf.WriteByte('?')
-
-	buf.WriteString(values.Encode())
-
-	url := buf.String()
-
-	tRes, err := http.Get(url)
+	tRes, err := http.Post(rp.TokenURL, "application/x-www-form-urlencoded", strings.NewReader(values.Encode()))
 	if err != nil {
+		log.Log().Warn(fmt.Sprintf("failed to request: %v", err))
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
@@ -46,6 +38,8 @@ func (rp *RP) Callback(
 
 	var token openapi.OPTokenResponseSchema
 	if err := json.Unmarshal(tBody, &token); err != nil {
+		log.Log().Warn(fmt.Sprintf("failed to unmarshal: %v", err))
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return

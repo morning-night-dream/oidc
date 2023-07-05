@@ -15,7 +15,7 @@ services:
     environment:
       ENV: ${ENV}
       REDIS_URL: redis:6379
-      DEBUG_MODE: ${DEBUG_MODE}
+      # DEBUG_MODE: ${DEBUG_MODE}
     volumes:
       - ../:/app
     restart: always

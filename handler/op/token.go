@@ -3,10 +3,10 @@ package op
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/morning-night-dream/oidc/model"
+	"github.com/morning-night-dream/oidc/pkg/log"
 	"github.com/morning-night-dream/oidc/pkg/openapi"
 )
 
@@ -60,11 +60,18 @@ func (op *OP) Token(
 		return
 	}
 
+	log.Log().Info(fmt.Sprintf("access token: %+v", authReq))
+
+	nonce := "nonce"
+	if authReq.Nonce != nil {
+		nonce = *authReq.Nonce
+	}
+
 	it := model.GenerateIDToken(
 		op.Issuer,
 		user.ID,
 		op.AllowClientID,
-		*authReq.Nonce,
+		nonce,
 		user.Username,
 	)
 
@@ -87,7 +94,7 @@ func (op *OP) Token(
 	w.Header().Set("Pragma", "no-cache")
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Printf("failed to encode response: %v", err)
+		log.Log().Warn(fmt.Sprintf("failed to encode response: %v", err))
 
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}
