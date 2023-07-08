@@ -505,6 +505,9 @@ components:
           example: token
         token_type_hint:
           type: string
+          enum:
+            - access_token
+            - refresh_token
           description: token_type_hint
           example: token_type_hint
       required:

@@ -37,3 +37,12 @@ func (cc *Cache[T]) Set(key string, val T) error {
 
 	return nil
 }
+
+func (cc *Cache[T]) Delete(key string) error {
+	cc.lock.Lock()
+	defer cc.lock.Unlock()
+
+	delete(cc.data, key)
+
+	return nil
+}

@@ -44,17 +44,17 @@ func (op *OP) Token(
 		"jti",
 		"scope",
 		"client_id",
-	)
+	).JWT("sign")
 
-	if err := op.AccessTokenCache.Set(user.ID, at); err != nil {
+	if err := op.AccessTokenCache.Set(at, user); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 
 		return
 	}
 
-	rt := model.GenerateRefreshToken()
+	rt := model.GenerateRefreshToken().Base64()
 
-	if err := op.RefreshTokenCache.Set(user.ID, rt); err != nil {
+	if err := op.RefreshTokenCache.Set(rt, user); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 
 		return
@@ -83,9 +83,9 @@ func (op *OP) Token(
 
 	res := openapi.OPTokenResponseSchema{
 		TokenType:    "Bearer",
-		AccessToken:  at.JWT("sign"),
+		AccessToken:  at,
 		IdToken:      it.JWT("sign"),
-		RefreshToken: rt.Base64(),
+		RefreshToken: rt,
 		ExpiresIn:    3600,
 	}
 

@@ -36,9 +36,9 @@ func main() {
 		Password: password,
 	})
 
-	accessToken := cache.New[model.AccessToken]()
+	accessToken := cache.New[model.User]()
 
-	refreshToken := cache.New[model.RefreshToken]()
+	refreshToken := cache.New[model.User]()
 
 	idToken := cache.New[model.IDToken]()
 
@@ -235,6 +235,7 @@ func (hdl *Handler) OpRevoke(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+	hdl.OP.Revoke(w, r)
 }
 
 func (hdl *Handler) RpLogin(
