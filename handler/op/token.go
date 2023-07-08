@@ -73,9 +73,9 @@ func (op *OP) Token(
 		op.AllowClientID,
 		nonce,
 		user.Username,
-	)
+	).RSA256(op.PrivateKey)
 
-	if err := op.IDTokenCache.Set(user.ID, it); err != nil {
+	if err := op.IDTokenCache.Set(it, user); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 
 		return
@@ -84,7 +84,7 @@ func (op *OP) Token(
 	res := openapi.OPTokenResponseSchema{
 		TokenType:    "Bearer",
 		AccessToken:  at,
-		IdToken:      it.JWT("sign"),
+		IdToken:      it,
 		RefreshToken: rt,
 		ExpiresIn:    3600,
 	}

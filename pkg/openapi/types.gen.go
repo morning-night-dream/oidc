@@ -7,13 +7,19 @@ const (
 	BearerScopes = "Bearer.Scopes"
 )
 
+// Defines values for OPRevokeRequestSchemaTokenTypeHint.
+const (
+	OPRevokeRequestSchemaTokenTypeHintAccessToken  OPRevokeRequestSchemaTokenTypeHint = "access_token"
+	OPRevokeRequestSchemaTokenTypeHintRefreshToken OPRevokeRequestSchemaTokenTypeHint = "refresh_token"
+)
+
 // Defines values for OPTokenRequestSchemaGrantType.
 const (
-	AuthorizationCode                     OPTokenRequestSchemaGrantType = "authorization_code"
-	ClientCredentials                     OPTokenRequestSchemaGrantType = "client_credentials"
-	Password                              OPTokenRequestSchemaGrantType = "password"
-	RefreshToken                          OPTokenRequestSchemaGrantType = "refresh_token"
-	UrnIetfParamsOauthGrantTypeDeviceCode OPTokenRequestSchemaGrantType = "urn:ietf:params:oauth:grant-type:device_code"
+	OPTokenRequestSchemaGrantTypeAuthorizationCode                     OPTokenRequestSchemaGrantType = "authorization_code"
+	OPTokenRequestSchemaGrantTypeClientCredentials                     OPTokenRequestSchemaGrantType = "client_credentials"
+	OPTokenRequestSchemaGrantTypePassword                              OPTokenRequestSchemaGrantType = "password"
+	OPTokenRequestSchemaGrantTypeRefreshToken                          OPTokenRequestSchemaGrantType = "refresh_token"
+	OPTokenRequestSchemaGrantTypeUrnIetfParamsOauthGrantTypeDeviceCode OPTokenRequestSchemaGrantType = "urn:ietf:params:oauth:grant-type:device_code"
 )
 
 // Defines values for OpAuthorizeParamsResponseType.
@@ -55,27 +61,30 @@ type IdPSignupRequestSchema struct {
 	Username string `json:"username"`
 }
 
+// OPJWKSetKey jwk set key
+type OPJWKSetKey struct {
+	// Alg 署名検証アルゴリズム
+	Alg string `json:"alg"`
+
+	// E exponent 公開鍵を復元するための指数値
+	E string `json:"e"`
+
+	// Kid 鍵識別子
+	Kid string `json:"kid"`
+
+	// Kty RSAやEC等の暗号アルゴリズファミリー
+	Kty string `json:"kty"`
+
+	// N modulus 公開鍵を復元するための公開鍵の絶対値
+	N string `json:"n"`
+
+	// Use 公開鍵の用途
+	Use string `json:"use"`
+}
+
 // OPJWKSetResponseSchema https://openid-foundation-japan.github.io/rfc7517.ja.html#anchor5
 type OPJWKSetResponseSchema struct {
-	Keys *[]struct {
-		// Alg 署名検証アルゴリズム
-		Alg *string `json:"alg,omitempty"`
-
-		// E exponent 公開鍵を復元するための指数値
-		E *string `json:"e,omitempty"`
-
-		// Kid 鍵識別子
-		Kid *string `json:"kid,omitempty"`
-
-		// Kty RSAやEC等の暗号アルゴリズファミリー
-		Kty *string `json:"kty,omitempty"`
-
-		// N modulus 公開鍵を復元するための公開鍵の絶対値
-		N *string `json:"n,omitempty"`
-
-		// Use 公開鍵の用途
-		Use *string `json:"use,omitempty"`
-	} `json:"keys,omitempty"`
+	Keys []OPJWKSetKey `json:"keys"`
 }
 
 // OPOpenIDConfigurationResponseSchema defines model for OPOpenIDConfigurationResponseSchema.
@@ -105,8 +114,11 @@ type OPRevokeRequestSchema struct {
 	Token string `json:"token"`
 
 	// TokenTypeHint token_type_hint
-	TokenTypeHint *string `json:"token_type_hint,omitempty"`
+	TokenTypeHint *OPRevokeRequestSchemaTokenTypeHint `json:"token_type_hint,omitempty"`
 }
+
+// OPRevokeRequestSchemaTokenTypeHint token_type_hint
+type OPRevokeRequestSchemaTokenTypeHint string
 
 // OPTokenRequestSchema defines model for OPTokenRequestSchema.
 type OPTokenRequestSchema struct {

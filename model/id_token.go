@@ -1,6 +1,7 @@
 package model
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"time"
 
@@ -56,6 +57,28 @@ func (it IDToken) JWT(
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	str, _ := token.SignedString([]byte(sign))
+
+	return str
+}
+
+func (it IDToken) RSA256(
+	key *rsa.PrivateKey,
+) string {
+	claims := jwt.MapClaims{
+		"iss":   it.Iss,
+		"sub":   it.Sub,
+		"aud":   it.Aud,
+		"exp":   it.Exp,
+		"iat":   it.Iat,
+		"nonce": it.Nonce,
+		"name":  it.Name,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+
+	token.Header["kid"] = "12345678"
+
+	str, _ := token.SignedString(key)
 
 	return str
 }

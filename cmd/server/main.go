@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"log"
@@ -40,7 +42,7 @@ func main() {
 
 	refreshToken := cache.New[model.User]()
 
-	idToken := cache.New[model.IDToken]()
+	idToken := cache.New[model.User]()
 
 	idp := &idp.IdP{
 		UserCache: user,
@@ -55,10 +57,20 @@ func main() {
 		UserInfoURL: "http://localhost:1234/op/userinfo",
 	}
 
+	reader := rand.Reader
+
+	bitSize := 2048
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	if err != nil {
+		panic(err)
+	}
+
 	op := &op.OP{
 		AllowClientID:        "morning-night-dream",
 		AllowRedirectURI:     "http://localhost:1234/rp/callback",
 		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),
+		PrivateKey:           key,
 		UserCache:            user,
 		LoggedInUserCache:    cache.New[model.User](),
 		AccessTokenCache:     accessToken,
@@ -229,6 +241,7 @@ func (hdl *Handler) OpCerts(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+	hdl.OP.Certs(w, r)
 }
 
 func (hdl *Handler) OpRevoke(
