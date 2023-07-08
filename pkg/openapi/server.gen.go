@@ -29,13 +29,19 @@ type ServerInterface interface {
 	// OP Callback
 	// (GET /op/callback)
 	OpCallback(w http.ResponseWriter, r *http.Request, params OpCallbackParams)
+	// OP JWK Set
+	// (GET /op/certs)
+	OpCerts(w http.ResponseWriter, r *http.Request)
 	// OP Login
 	// (POST /op/login)
 	OpLogin(w http.ResponseWriter, r *http.Request)
 	// OP Login
 	// (GET /op/login/view)
 	OpLoginView(w http.ResponseWriter, r *http.Request, params OpLoginViewParams)
-	// Token Request
+	// OP Revocation Request
+	// (POST /op/revoke)
+	OpRevoke(w http.ResponseWriter, r *http.Request)
+	// OP Token Request
 	// (POST /op/token)
 	OpToken(w http.ResponseWriter, r *http.Request)
 	// UserInfo Request
@@ -234,6 +240,21 @@ func (siw *ServerInterfaceWrapper) OpCallback(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// OpCerts operation middleware
+func (siw *ServerInterfaceWrapper) OpCerts(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpCerts(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // OpLogin operation middleware
 func (siw *ServerInterfaceWrapper) OpLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -275,6 +296,21 @@ func (siw *ServerInterfaceWrapper) OpLoginView(w http.ResponseWriter, r *http.Re
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.OpLoginView(w, r, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// OpRevoke operation middleware
+func (siw *ServerInterfaceWrapper) OpRevoke(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpRevoke(w, r)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -510,10 +546,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/op/callback", wrapper.OpCallback)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/op/certs", wrapper.OpCerts)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/login", wrapper.OpLogin)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/op/login/view", wrapper.OpLoginView)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/op/revoke", wrapper.OpRevoke)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/token", wrapper.OpToken)

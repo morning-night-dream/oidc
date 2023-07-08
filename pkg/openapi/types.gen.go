@@ -55,6 +55,29 @@ type IdPSignupRequestSchema struct {
 	Username string `json:"username"`
 }
 
+// OPJWKSetResponseSchema https://openid-foundation-japan.github.io/rfc7517.ja.html#anchor5
+type OPJWKSetResponseSchema struct {
+	Keys *[]struct {
+		// Alg 署名検証アルゴリズム
+		Alg *string `json:"alg,omitempty"`
+
+		// E exponent 公開鍵を復元するための指数値
+		E *string `json:"e,omitempty"`
+
+		// Kid 鍵識別子
+		Kid *string `json:"kid,omitempty"`
+
+		// Kty RSAやEC等の暗号アルゴリズファミリー
+		Kty *string `json:"kty,omitempty"`
+
+		// N modulus 公開鍵を復元するための公開鍵の絶対値
+		N *string `json:"n,omitempty"`
+
+		// Use 公開鍵の用途
+		Use *string `json:"use,omitempty"`
+	} `json:"keys,omitempty"`
+}
+
 // OPOpenIDConfigurationResponseSchema defines model for OPOpenIDConfigurationResponseSchema.
 type OPOpenIDConfigurationResponseSchema struct {
 	// AuthorizationEndpoint http://localhost:1234/op/authorize
@@ -62,6 +85,9 @@ type OPOpenIDConfigurationResponseSchema struct {
 
 	// Issuer http://localhost:1234/op
 	Issuer string `json:"issuer"`
+
+	// JwksUrl http://localhost:1234/op/certs
+	JwksUrl string `json:"jwks_url"`
 
 	// RevocationEndpoint http://localhost:1234/op/revoke
 	RevocationEndpoint string `json:"revocation_endpoint"`
@@ -71,6 +97,15 @@ type OPOpenIDConfigurationResponseSchema struct {
 
 	// UserinfoEndpoint http://localhost:1234/op/userinfo
 	UserinfoEndpoint string `json:"userinfo_endpoint"`
+}
+
+// OPRevokeRequestSchema https://openid-foundation-japan.github.io/rfc7009.ja.html#anchor2
+type OPRevokeRequestSchema struct {
+	// Token token
+	Token string `json:"token"`
+
+	// TokenTypeHint token_type_hint
+	TokenTypeHint *string `json:"token_type_hint,omitempty"`
 }
 
 // OPTokenRequestSchema defines model for OPTokenRequestSchema.
@@ -168,6 +203,9 @@ type IdpSigninJSONRequestBody = IdPSigninRequestSchema
 
 // IdpSignupJSONRequestBody defines body for IdpSignup for application/json ContentType.
 type IdpSignupJSONRequestBody = IdPSignupRequestSchema
+
+// OpRevokeFormdataRequestBody defines body for OpRevoke for application/x-www-form-urlencoded ContentType.
+type OpRevokeFormdataRequestBody = OPRevokeRequestSchema
 
 // OpTokenFormdataRequestBody defines body for OpToken for application/x-www-form-urlencoded ContentType.
 type OpTokenFormdataRequestBody = OPTokenRequestSchema

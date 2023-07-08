@@ -210,11 +210,11 @@ paths:
     post:
       tags:
         - OP
-      summary: Token Request
+      summary: OP Token Request
       description: https://openid-foundation-japan.github.io/openid-connect-core-1_0.ja.html#TokenRequest
       operationId: opToken
       requestBody:
-        description: opToken request body 
+        description: OP Token request body 
         required: true
         content:
           application/x-www-form-urlencoded:
@@ -256,6 +256,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OPUserInfoResponseSchema'
+        '500':
+          description: Internal Server Error
+  /op/revoke:
+    post:
+      tags:
+        - OP
+      summary: OP Revocation Request
+      description: https://openid.net/specs/openid-connect-core-1_0.html#Revocation
+      operationId: opRevoke
+      requestBody:
+        description: OP Revoke request body 
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OPRevokeRequestSchema'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: error
+                    example: invalid_request
+        '500':
+          description: Internal Server Error
+  /op/certs:
+    get:
+      tags:
+        - OP
+      summary: OP JWK Set
+      description: https://openid-foundation-japan.github.io/rfc7517.ja.html
+      operationId: opCerts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OPJWKSetResponseSchema'
         '500':
           description: Internal Server Error
   /rp/login:
@@ -361,6 +407,11 @@ components:
           description: http://localhost:1234/op/userinfo
           format: uri
           example: http://localhost:1234/op/userinfo
+        jwks_url:
+          type: string
+          description: http://localhost:1234/op/certs
+          format: uri
+          example: http://localhost:1234/op/certs
         revocation_endpoint:
           type: string
           description: http://localhost:1234/op/revoke
@@ -371,6 +422,7 @@ components:
         - authorization_endpoint
         - token_endpoint
         - userinfo_endpoint
+        - jwks_url
         - revocation_endpoint
     OPTokenRequestSchema:
       type: object
@@ -443,3 +495,50 @@ components:
       required:
         - sub
         - name
+    OPRevokeRequestSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/rfc7009.ja.html#anchor2
+      properties:
+        token:
+          type: string
+          description: token
+          example: token
+        token_type_hint:
+          type: string
+          description: token_type_hint
+          example: token_type_hint
+      required:
+        - token
+    OPJWKSetResponseSchema:
+      type: object
+      description: https://openid-foundation-japan.github.io/rfc7517.ja.html#anchor5
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+            properties:
+              kid:
+                type: string
+                description: 鍵識別子
+                example: kid
+              kty:
+                type: string
+                description: RSAやEC等の暗号アルゴリズファミリー
+                example: kty
+              use:
+                type: string
+                description: 公開鍵の用途
+                example: use
+              alg:
+                type: string
+                description: 署名検証アルゴリズム
+                example: alg
+              n:
+                type: string
+                description: modulus 公開鍵を復元するための公開鍵の絶対値
+                example: n
+              e:
+                type: string
+                description: exponent 公開鍵を復元するための指数値
+                example: e

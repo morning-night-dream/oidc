@@ -225,6 +225,18 @@ func (hdl *Handler) OpToken(
 	hdl.OP.Token(w, r)
 }
 
+func (hdl *Handler) OpCerts(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+}
+
+func (hdl *Handler) OpRevoke(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+}
+
 func (hdl *Handler) RpLogin(
 	w http.ResponseWriter,
 	r *http.Request,
