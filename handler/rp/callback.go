@@ -45,7 +45,7 @@ func (rp *RP) Callback(
 		return
 	}
 
-	log.Log().Debug(fmt.Sprintf("%+v", token))
+	log.Log().Info(fmt.Sprintf("token: %+v", token))
 
 	// userinfo取得
 	client := &http.Client{
