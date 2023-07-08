@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+
 	"github.com/morning-night-dream/oidc/cache"
 	"github.com/morning-night-dream/oidc/handler/idp"
 	"github.com/morning-night-dream/oidc/handler/op"
@@ -33,7 +35,7 @@ func main() {
 
 	// NOTE: テストユーザーを登録
 	user.Set("username", model.User{
-		ID:       "id",
+		ID:       uuid.NewString(),
 		Username: "username",
 		Password: password,
 	})
