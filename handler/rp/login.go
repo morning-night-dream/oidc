@@ -36,6 +36,7 @@ func (rp *RP) Login(
 		"redirect_uri":  {rp.RedirectURI},               // ログイン後にリダイレクトさせるURL OPに登録してある必要がある
 		"scope":         {strings.Join(rp.Scopes, " ")}, // RPが要求するスコープ OPに登録してある必要がある
 		"state":         {state},                        // CSRF対策のためのstate
+		"nonce":         {uuid.NewString()},             // CSRF対策のためのnonce
 	}
 
 	buf.WriteByte('?')
