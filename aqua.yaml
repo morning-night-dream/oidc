@@ -11,3 +11,4 @@ registries:
   ref: v4.21.0 # renovate: depName=aquaproj/aqua-registry
 packages:
   - name: deepmap/oapi-codegen@v1.13.0
+  - name: google/ko@v0.14.1
