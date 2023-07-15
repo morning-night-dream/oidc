@@ -24,12 +24,12 @@ spec:
               value: "8080"
             - name: SELF_URL
               value: "{{ .Values.selfUrl }}"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 10
           resources:
             limits:
               cpu: "1"
