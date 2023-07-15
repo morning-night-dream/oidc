@@ -1,0 +1,7 @@
+# environment
+env: prod
+# container image
+image:
+  organization: morningnightdream
+  repository: oidc
+  tag: latest

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc
+  labels:
+    app: oidc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oidc
+  template:
+    metadata:
+      labels:
+        app: oidc
+    spec:
+      containers:
+        - name: oidc
+          image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: ENV
+              value: "{{ .Values.env }}"
+            - name: PORT
+              value: "8080"
+            - name: SELF_URL
+              value: "{{ .Values.selfUrl }}"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: "1"
+              memory: 128Mi

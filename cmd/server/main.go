@@ -26,6 +26,16 @@ import (
 )
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "1234"
+	}
+
+	selfURL := os.Getenv("SELF_URL")
+	if selfURL == "" {
+		selfURL = fmt.Sprintf("http://localhost:%s", port)
+	}
+
 	user := cache.New[model.User]()
 
 	password, err := model.PasswordEncrypt("password")
@@ -52,11 +62,11 @@ func main() {
 
 	rp := &rp.RP{
 		ClientID:    "morning-night-dream",
-		RedirectURI: "http://localhost:1234/rp/callback",
+		RedirectURI: fmt.Sprintf("%s/rp/callback", selfURL),
 		Scopes:      []string{"openid"},
-		AuthURL:     "http://localhost:1234/op/authorize",
-		TokenURL:    "http://localhost:1234/op/token",
-		UserInfoURL: "http://localhost:1234/op/userinfo",
+		AuthURL:     fmt.Sprintf("%s/op/authorize", selfURL),
+		TokenURL:    fmt.Sprintf("%s/op/token", selfURL),
+		UserInfoURL: fmt.Sprintf("%s/op/userinfo", selfURL),
 	}
 
 	reader := rand.Reader
@@ -70,7 +80,7 @@ func main() {
 
 	op := &op.OP{
 		AllowClientID:        "morning-night-dream",
-		AllowRedirectURI:     "http://localhost:1234/rp/callback",
+		AllowRedirectURI:     fmt.Sprintf("%s/rp/callback", selfURL),
 		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),
 		PrivateKey:           key,
 		UserCache:            user,
@@ -78,10 +88,10 @@ func main() {
 		AccessTokenCache:     accessToken,
 		RefreshTokenCache:    refreshToken,
 		IDTokenCache:         idToken,
-		Issuer:               "http://localhost:1234",
+		Issuer:               selfURL,
 	}
 
-	srv := NewServer("1234", NewHandler(idp, rp, op))
+	srv := NewServer(port, NewHandler(selfURL, idp, rp, op))
 
 	srv.Run()
 }
@@ -141,6 +151,7 @@ type Handler struct {
 }
 
 func NewHandler(
+	selfURL string,
 	idp *idp.IdP,
 	rp *rp.RP,
 	op *op.OP,
@@ -151,7 +162,7 @@ func NewHandler(
 
 	// NOTE: 動作確認しやすくするための実装
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		url := "http://localhost:1234/rp/login"
+		url := fmt.Sprintf("%s/rp/login", selfURL)
 
 		http.Redirect(w, r, url, http.StatusFound)
 	})

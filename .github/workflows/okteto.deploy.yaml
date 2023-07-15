@@ -1,0 +1,16 @@
+name: okteto deploy
+run-name: ${{ github.ref_name }} by @${{ github.actor }} ${{ github.workflow }}
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install okteto
+        run: curl https://get.okteto.com -sSfL | sh
+      - name: Context okteto
+        run: okteto context use https://cloud.okteto.com --token ${{ secrets.OKTETO_TOKEN }}
+      - name: Deploy okteto
+        run: okteto deploy --namespace oidc-morning-night-dreamer
