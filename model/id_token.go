@@ -54,7 +54,7 @@ func (it IDToken) JWT(
 		"name":  it.Name,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(&jwt.SigningMethodRSA{}, claims)
 
 	str, _ := token.SignedString([]byte(sign))
 
