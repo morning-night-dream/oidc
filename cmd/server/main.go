@@ -178,7 +178,7 @@ func NewHandler(
 			BaseRouter: router,
 			Middlewares: []openapi.MiddlewareFunc{
 				middleware.NewAccessLog().Handle,
-				middleware.NewCORS(),
+				middleware.NewCORS(selfURL),
 			},
 		})
 

@@ -51,7 +51,7 @@ func (op *OP) Login(
 
 	var buf bytes.Buffer
 
-	buf.WriteString("http://localhost:1234/op/callback")
+	buf.WriteString(fmt.Sprintf("%s/op/callback", op.SelfURL))
 
 	values := url.Values{
 		"id": {id},

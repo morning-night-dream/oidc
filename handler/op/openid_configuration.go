@@ -14,12 +14,12 @@ func (op *OP) OpenIDConfiguration(
 	r *http.Request,
 ) {
 	res := openapi.OPOpenIDConfigurationResponseSchema{
-		AuthorizationEndpoint: "http://localhost:1234/op/authorize",
-		Issuer:                "http://localhost:1234",
-		JwksUrl:               "http://localhost:1234/op/jwks",
-		RevocationEndpoint:    "http://localhost:1234/op/revoke",
-		TokenEndpoint:         "http://localhost:1234/op/token",
-		UserinfoEndpoint:      "http://localhost:1234/op/userinfo",
+		AuthorizationEndpoint: fmt.Sprintf("%s/op/authorize", op.SelfURL),
+		Issuer:                op.SelfURL,
+		JwksUrl:               fmt.Sprintf("%s/op/jwks", op.SelfURL),
+		RevocationEndpoint:    fmt.Sprintf("%s/op/revoke", op.SelfURL),
+		TokenEndpoint:         fmt.Sprintf("%s/op/token", op.SelfURL),
+		UserinfoEndpoint:      fmt.Sprintf("%s/op/userinfo", op.SelfURL),
 	}
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
