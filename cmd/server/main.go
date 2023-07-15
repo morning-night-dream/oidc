@@ -79,6 +79,7 @@ func main() {
 	}
 
 	op := &op.OP{
+		SelfURL:              selfURL,
 		AllowClientID:        "morning-night-dream",
 		AllowRedirectURI:     fmt.Sprintf("%s/rp/callback", selfURL),
 		AuthorizeParamsCache: cache.New[openapi.OpAuthorizeParams](),

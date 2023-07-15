@@ -12,6 +12,7 @@ type OP struct {
 	Issuer               string
 	AllowClientID        string
 	AllowRedirectURI     string
+	SelfURL              string
 	PrivateKey           *rsa.PrivateKey
 	AuthorizeParamsCache *cache.Cache[openapi.OpAuthorizeParams]
 	UserCache            *cache.Cache[model.User] // User情報ストア

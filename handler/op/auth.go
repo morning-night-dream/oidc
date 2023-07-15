@@ -2,6 +2,7 @@ package op
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -20,7 +21,7 @@ func (op *OP) Authorize(
 
 	var buf bytes.Buffer
 
-	buf.WriteString("http://localhost:1234/op/login/view")
+	buf.WriteString(fmt.Sprintf("%s/op/login/view", op.SelfURL))
 
 	id := uuid.NewString()
 
