@@ -5,3 +5,4 @@ image:
   organization: morningnightdream
   repository: oidc
   tag: latest
+selfUrl: https://oidc-oidc-morning-night-dreamer.cloud.okteto.net
