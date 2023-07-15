@@ -148,7 +148,7 @@ paths:
                 example: http://localhost:1234/rp/callback
         '500':
           description: Internal Server Error
-  /op/login/view:
+  /op/login:
     get:
       tags:
         - OP
@@ -168,7 +168,6 @@ paths:
           description: OK
         '500':
           description: Internal Server Error
-  /op/login:
     post:
       tags:
         - OP

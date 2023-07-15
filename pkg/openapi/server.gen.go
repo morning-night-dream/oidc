@@ -33,11 +33,11 @@ type ServerInterface interface {
 	// (GET /op/certs)
 	OpCerts(w http.ResponseWriter, r *http.Request)
 	// OP Login
+	// (GET /op/login)
+	OpLoginView(w http.ResponseWriter, r *http.Request, params OpLoginViewParams)
+	// OP Login
 	// (POST /op/login)
 	OpLogin(w http.ResponseWriter, r *http.Request)
-	// OP Login
-	// (GET /op/login/view)
-	OpLoginView(w http.ResponseWriter, r *http.Request, params OpLoginViewParams)
 	// OP Revocation Request
 	// (POST /op/revoke)
 	OpRevoke(w http.ResponseWriter, r *http.Request)
@@ -255,21 +255,6 @@ func (siw *ServerInterfaceWrapper) OpCerts(w http.ResponseWriter, r *http.Reques
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// OpLogin operation middleware
-func (siw *ServerInterfaceWrapper) OpLogin(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.OpLogin(w, r)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // OpLoginView operation middleware
 func (siw *ServerInterfaceWrapper) OpLoginView(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -296,6 +281,21 @@ func (siw *ServerInterfaceWrapper) OpLoginView(w http.ResponseWriter, r *http.Re
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.OpLoginView(w, r, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// OpLogin operation middleware
+func (siw *ServerInterfaceWrapper) OpLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpLogin(w, r)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -549,10 +549,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/op/certs", wrapper.OpCerts)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/op/login", wrapper.OpLogin)
+		r.Get(options.BaseURL+"/op/login", wrapper.OpLoginView)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/op/login/view", wrapper.OpLoginView)
+		r.Post(options.BaseURL+"/op/login", wrapper.OpLogin)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/op/revoke", wrapper.OpRevoke)

@@ -111,11 +111,11 @@ type ClientInterface interface {
 	// OpCerts request
 	OpCerts(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// OpLogin request
-	OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// OpLoginView request
 	OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpLogin request
+	OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// OpRevoke request with any body
 	OpRevokeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -233,8 +233,8 @@ func (c *Client) OpCerts(ctx context.Context, reqEditors ...RequestEditorFn) (*h
 	return c.Client.Do(req)
 }
 
-func (c *Client) OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewOpLoginRequest(c.Server)
+func (c *Client) OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpLoginViewRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +245,8 @@ func (c *Client) OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*h
 	return c.Client.Do(req)
 }
 
-func (c *Client) OpLoginView(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewOpLoginViewRequest(c.Server, params)
+func (c *Client) OpLogin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpLoginRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -633,33 +633,6 @@ func NewOpCertsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewOpLoginRequest generates requests for OpLogin
-func NewOpLoginRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/op/login")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewOpLoginViewRequest generates requests for OpLoginView
 func NewOpLoginViewRequest(server string, params *OpLoginViewParams) (*http.Request, error) {
 	var err error
@@ -669,7 +642,7 @@ func NewOpLoginViewRequest(server string, params *OpLoginViewParams) (*http.Requ
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/op/login/view")
+	operationPath := fmt.Sprintf("/op/login")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -698,6 +671,33 @@ func NewOpLoginViewRequest(server string, params *OpLoginViewParams) (*http.Requ
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewOpLoginRequest generates requests for OpLogin
+func NewOpLoginRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/op/login")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -961,11 +961,11 @@ type ClientWithResponsesInterface interface {
 	// OpCerts request
 	OpCertsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpCertsResponse, error)
 
-	// OpLogin request
-	OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error)
-
 	// OpLoginView request
 	OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error)
+
+	// OpLogin request
+	OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error)
 
 	// OpRevoke request with any body
 	OpRevokeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpRevokeResponse, error)
@@ -1115,27 +1115,6 @@ func (r OpCertsResponse) StatusCode() int {
 	return 0
 }
 
-type OpLoginResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-}
-
-// Status returns HTTPResponse.Status
-func (r OpLoginResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r OpLoginResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type OpLoginViewResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1151,6 +1130,27 @@ func (r OpLoginViewResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r OpLoginViewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type OpLoginResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r OpLoginResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpLoginResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1342,15 +1342,6 @@ func (c *ClientWithResponses) OpCertsWithResponse(ctx context.Context, reqEditor
 	return ParseOpCertsResponse(rsp)
 }
 
-// OpLoginWithResponse request returning *OpLoginResponse
-func (c *ClientWithResponses) OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error) {
-	rsp, err := c.OpLogin(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseOpLoginResponse(rsp)
-}
-
 // OpLoginViewWithResponse request returning *OpLoginViewResponse
 func (c *ClientWithResponses) OpLoginViewWithResponse(ctx context.Context, params *OpLoginViewParams, reqEditors ...RequestEditorFn) (*OpLoginViewResponse, error) {
 	rsp, err := c.OpLoginView(ctx, params, reqEditors...)
@@ -1358,6 +1349,15 @@ func (c *ClientWithResponses) OpLoginViewWithResponse(ctx context.Context, param
 		return nil, err
 	}
 	return ParseOpLoginViewResponse(rsp)
+}
+
+// OpLoginWithResponse request returning *OpLoginResponse
+func (c *ClientWithResponses) OpLoginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*OpLoginResponse, error) {
+	rsp, err := c.OpLogin(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpLoginResponse(rsp)
 }
 
 // OpRevokeWithBodyWithResponse request with arbitrary body returning *OpRevokeResponse
@@ -1537,22 +1537,6 @@ func ParseOpCertsResponse(rsp *http.Response) (*OpCertsResponse, error) {
 	return response, nil
 }
 
-// ParseOpLoginResponse parses an HTTP response from a OpLoginWithResponse call
-func ParseOpLoginResponse(rsp *http.Response) (*OpLoginResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &OpLoginResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	return response, nil
-}
-
 // ParseOpLoginViewResponse parses an HTTP response from a OpLoginViewWithResponse call
 func ParseOpLoginViewResponse(rsp *http.Response) (*OpLoginViewResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1562,6 +1546,22 @@ func ParseOpLoginViewResponse(rsp *http.Response) (*OpLoginViewResponse, error) 
 	}
 
 	response := &OpLoginViewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseOpLoginResponse parses an HTTP response from a OpLoginWithResponse call
+func ParseOpLoginResponse(rsp *http.Response) (*OpLoginResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpLoginResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

@@ -21,7 +21,7 @@ func (op *OP) Authorize(
 
 	var buf bytes.Buffer
 
-	buf.WriteString(fmt.Sprintf("%s/op/login/view", op.SelfURL))
+	buf.WriteString(fmt.Sprintf("%s/op/login", op.SelfURL))
 
 	id := uuid.NewString()
 
