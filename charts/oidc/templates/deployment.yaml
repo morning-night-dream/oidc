@@ -17,6 +17,7 @@ spec:
       containers:
         - name: oidc
           image: "{{ .Values.image.organization }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
           env:
             - name: ENV
               value: "{{ .Values.env }}"
