@@ -93,6 +93,8 @@ func main() {
 
 	srv := NewServer(port, NewHandler(selfURL, idp, rp, op))
 
+	log.Printf("server started on %s", selfURL)
+
 	srv.Run()
 }
 
@@ -115,8 +117,6 @@ func NewServer(
 }
 
 func (srv *Server) Run() {
-	log.Printf("server started on %s", srv.Addr)
-
 	go func() {
 		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("server closed with error: %v", err)
