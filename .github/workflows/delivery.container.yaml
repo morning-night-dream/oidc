@@ -1,0 +1,28 @@
+name: delivery container
+run-name: ${{ github.ref_name }} by @${{ github.actor }} [${{ github.workflow }}]
+on:
+  workflow_dispatch:
+jobs:
+  container:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - name: Setup aqua
+        uses: aquaproj/aqua-installer@v2.1.2
+        with:
+          aqua_version: v2.9.0
+      - name: Install ko
+        run: ${AQUA_ROOT_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/aquaproj-aqua}/bin/aqua install -t ko
+      - name: Docker login
+        run: ko login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }} index.docker.io
+      - name: Build and push app core container
+        working-directory: ./cmd/server
+        run: |
+          KO_DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/oidc \
+          SOURCE_DATE_EPOCH=$(date +%s) \
+          ko build --sbom=none --bare --tags=latest ./ --platform=linux/amd64
